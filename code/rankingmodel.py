@@ -1,6 +1,38 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from sklearn.cross_validation import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import pickle
+
+
+class RankingModel(object):
+    def __init__(self,
+                 model=RandomForestClassifier(),
+                 parameters={'n_estimators':100,
+                             'criterion':'entropy',
+                             'max_depth':10}):      
+        '''
+        model: choice of model
+        parameters: parameter for model, dictionary
+        '''
+        self.model = model
+        self.parameters = parameters
+        
+
+    def fit(self, X, y):
+        '''
+        X: 2-dim array representing feature matrix for training data
+        y: 1-d array representing labels for training data
+        '''
+        self.model = self.model(**self.parameters).fit(X, y)
+
+
+    def predict(self, X):
+        '''
+        X: 2-dim array representing feature matrix for test data
+        '''
+        return self.model.predict(X)
 
 
 def process_data(df_raw):
@@ -32,7 +64,7 @@ def process_data(df_raw):
 
     df['int_rate'] = df['int_rate'].map(lambda x: float(str(x).strip('%')) / 100)
 
-    df['term'] = df['term'].map(lambda x: int(x.strip(' months')))
+    df['term'] = df['term'].map(lambda x: int(str(x).strip(' months')))
 
     df['emp_length'] = df['emp_length'].map(lambda x: '0.5 years' if x == '< 1 year' else x)
     df['emp_length'] = df['emp_length'].map(lambda x: '10 years' if x == '10+ years' else x)
@@ -79,7 +111,7 @@ def convert_to_array(data,
                      create_label=False,
                      label='sub_grade',
                      label_one='A1',
-                     label_zero='E5'):
+                     label_zero='D5'):
 
     date_mask = data['issue_d'].isin(date_range)
 
@@ -96,11 +128,11 @@ def convert_to_array(data,
 
 def main():
     # Load data, then pre-process
-
     print "Loading data..."
-    df_2014 = pd.read_csv('../data/loans3c.csv', header=True).iloc[:-2, :]
-    df_2013 = pd.read_csv('../data/loans3b.csv', header=True).iloc[:-2, :]
-    df_raw = pd.concat((df_2014, df_2013.iloc), axis=0)
+
+    df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+    df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    df_raw = pd.concat((df_3c, df_3b), axis=0)
 
     df = process_data(df_raw)
     df = df[df['term'] == 36]
@@ -110,7 +142,6 @@ def main():
 
 
     # Define scope, then convert data to array
-
     print "Setting scope..."
 
     date_range = ['Dec-2014', 'Nov-2014', 'Oct-2014', 
@@ -132,14 +163,30 @@ def main():
                             date_range=date_range,
                             features=features,
                             create_label=True,
-                            label='grade',
-                            label_one='A',
-                            label_zero='E')
+                            label='sub_grade',
+                            label_one='A1',
+                            label_zero='D4')
 
     # pickle.dump(X, open('../pickle/X.pkl', 'w'))
     # pickle.dump(y, open('../pickle/y.pkl', 'w'))
     # X = pickle.load(open('../pickle/X.pkl', 'r'))
     # y = pickle.load(open('../pickle/y.pkl', 'r'))
+
+
+    # Test model accuracy
+    print "Testing model accuracy..."
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    model = RankingModel(model=RandomForestClassifier,
+                         parameters={'n_estimators':100,
+                                     'criterion':'entropy',
+                                     'max_depth':10})
+
+    model.fit(X_train, y_train)
+    y_predict = model.predict(X_test)
+
+    print np.sum(y_predict == y_test) / float(len(y_test))
 
 
 if __name__ == '__main__':
