@@ -73,12 +73,73 @@ def process_data(df_raw):
     return df
 
 
+def convert_to_array(data,
+                     date_range,
+                     features,
+                     create_label=False,
+                     label='sub_grade',
+                     label_one='A1',
+                     label_zero='E5'):
+
+    date_mask = data['issue_d'].isin(date_range)
+
+    if create_label:
+        label_mask = data[label].isin([label_one, label_zero])
+        X = data[date_mask & label_mask][features].values
+        y = data[date_mask & label_mask][label].map({label_one:1, label_zero:0}).values 
+    else:
+        X = data[date_mask][features].values
+        y = data[date_mask][label].values 
+
+    return X, y
+
+
 def main():
+    # Load data, then pre-process
+
+    print "Loading data..."
     df_2014 = pd.read_csv('../data/loans3c.csv', header=True).iloc[:-2, :]
     df_2013 = pd.read_csv('../data/loans3b.csv', header=True).iloc[:-2, :]
     df_raw = pd.concat((df_2014, df_2013.iloc), axis=0)
 
     df = process_data(df_raw)
+    df = df[df['term'] == 36]
+
+    # pickle.dump(df, open('../pickle/df.pkl', 'w'))
+    # df = pickle.load(open('../pickle/df.pkl', 'r'))
+
+
+    # Define scope, then convert data to array
+
+    print "Setting scope..."
+
+    date_range = ['Dec-2014', 'Nov-2014', 'Oct-2014', 
+                  'Sep-2014', 'Aug-2014', 'Jul-2014', 
+                  'Jun-2014', 'May-2014', 'Apr-2014', 
+                  'Mar-2014', 'Feb-2014', 'Jan-2014']
+
+    features = ['loan_amnt', 'emp_length', 'monthly_inc', 'dti', 
+                'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
+                'revol_bal', 'revol_util', 'inq_last_6mths', 
+                'delinq_2yrs', 'pub_rec', 'collect_12mths', 
+                'purpose_biz', 'purpose_buy', 'purpose_credit', 
+                'purpose_debt', 'purpose_energy', 'purpose_home', 
+                'purpose_medic', 'purpose_vac', 'purpose_wed', 
+                'home_own_any', 'home_own_mortgage', 'home_own_none', 
+                'home_own_other', 'home_own_own', 'home_own_rent']
+
+    X, y = convert_to_array(data=df, 
+                            date_range=date_range,
+                            features=features,
+                            create_label=True,
+                            label='grade',
+                            label_one='A',
+                            label_zero='E')
+
+    # pickle.dump(X, open('../pickle/X.pkl', 'w'))
+    # pickle.dump(y, open('../pickle/y.pkl', 'w'))
+    # X = pickle.load(open('../pickle/X.pkl', 'r'))
+    # y = pickle.load(open('../pickle/y.pkl', 'r'))
 
 
 if __name__ == '__main__':
