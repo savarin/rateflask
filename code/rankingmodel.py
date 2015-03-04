@@ -44,7 +44,8 @@ def process_data(df_raw):
     https://www.lendingclub.com/info/demand-and-credit-profile.action
     
     emp_length - 10 if >10 yrs, average if n/a
-    earliest_cr_line - converted to time b/w first credit line and date of loan issuance
+    earliest_cr_line - converted to length of time b/w first credit line and 
+        date of loan issuance, zero if np.nan
     revol_util - missing values filled in by average
     '''
     df = df_raw[['id', 'grade', 'sub_grade', 'issue_d', 'loan_status', 'int_rate',
@@ -79,6 +80,11 @@ def process_data(df_raw):
     df['fico_range_low'] = (df['fico_range_low'] + df['fico_range_high']) / 2.
     df.rename(columns={'fico_range_low': 'fico'}, inplace=True)
 
+    
+    df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x:\
+                                x['issue_d'] if pd.isnull(x['earliest_cr_line']) \
+                                             else x['earliest_cr_line'], axis=1)
+
     df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x:\
                                 (datetime.strptime(x['issue_d'], '%b-%Y') \
                                 - datetime.strptime(x['earliest_cr_line'], '%b-%Y')).days / 30, axis=1)
@@ -94,6 +100,7 @@ def process_data(df_raw):
                                        'medical':'medic', 'renewable_energy':'energy', 
                                        'small_business':'biz', 'vacation':'vac', 
                                        'wedding':'wed'})
+
     df = pd.concat([df, pd.get_dummies(df['purpose'], prefix='purpose')], axis=1)
 
     df['home_ownership'] = df['home_ownership'].map(lambda x: x.lower())
@@ -165,7 +172,7 @@ def main():
                             create_label=True,
                             label='sub_grade',
                             label_one='A1',
-                            label_zero='D4')
+                            label_zero='D5')
 
     # pickle.dump(X, open('../pickle/X.pkl', 'w'))
     # pickle.dump(y, open('../pickle/y.pkl', 'w'))
@@ -180,10 +187,11 @@ def main():
 
     model = RankingModel(model=RandomForestClassifier,
                          parameters={'n_estimators':100,
-                                     'criterion':'entropy',
                                      'max_depth':10})
 
     model.fit(X_train, y_train)
+    pickle.dump(y, open('../pickle/rankingmodel.pkl', 'w'))
+
     y_predict = model.predict(X_test)
 
     print np.sum(y_predict == y_test) / float(len(y_test))

@@ -45,6 +45,44 @@ class StatusModels(object):
         self.model_dict = grade_dict
 
 
+    def exponential_dist(self, x, beta):
+        '''
+        Exponential curve for payout probability smoothing
+        '''
+        return np.exp(-x / beta)
+
+
+    def predict_payout_prob(self, X, X_sub_grade):
+        '''
+        Predicts payout probability for whole date range
+        '''
+        payout_prob = []
+
+        for i, x in enumerate(X):
+            payout_prob_x = []
+            for model in self.model_dict[X_sub_grade[i][0]]:
+                payout_prob_x.append(model.predict(x))
+
+            # payout_prob_x gives the predicted probability of receiving payment
+            # on specified month           
+            payout_prob_x = np.array(payout_prob_x).ravel()
+            payout_len = payout_prob_x.shape[0]
+
+            beta = curve_fit(self.exponential_dist, 
+                             np.arange(1, payout_len + 1),
+                             payout_prob_x)[0][0]
+
+            # payout_smooth_x gives the predicted probability after smoothing by
+            # fitting to exponential curve with a negative coefficient
+            # http://en.wikipedia.org/wiki/Exponential_distribution
+            payout_smooth_x = self.exponential_dist(np.arange(1, payout_len + 1),
+                                                    beta)
+
+            payout_prob.append(payout_smooth_x)
+
+        return np.array(payout_prob)
+
+
 def main():
     # Load data, then pre-process
     print "Loading data..."
@@ -104,6 +142,20 @@ def main():
     # pickle.dump(model.model_dict, open('../pickle/model_dict.pkl', 'w'))
     # model.model_dict = pickle.load(open('../pickle/model_dict.pkl', 'r'))
 
-    
+
+    # Testing cashflow projection
+    print "Testing cashflow projection..."
+
+    df_select = df[(df['sub_grade'].isin(sub_grade_range) 
+                & (df['issue_d'].isin(date_range)))]
+
+    X = df_select[features].values
+    X_sub_grade = df_select['sub_grade'].values
+    X_int_rate = df_select['int_rate'].values
+    X_id = df_select['id'].values
+
+    print 'payout_prob', model.predict_payout_prob(X, X_sub_grade) 
+
+
 if __name__ == '__main__':
     main()
