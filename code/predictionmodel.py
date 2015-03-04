@@ -18,7 +18,7 @@ class StatusModels(object):
         '''
         self.model = model
         self.parameters = parameters
-        self.model_dict = {}
+        self.model_dict = defaultdict(list)
 
 
     def train_status_models(self, df, sub_grade_range, date_range, features):
@@ -52,7 +52,7 @@ class StatusModels(object):
         return np.exp(-x / beta)
 
 
-    def predict_payout_prob(self, X, X_sub_grade):
+    def get_payout_prob(self, X, X_sub_grade):
         '''
         Predicts payout probability for whole date range
         '''
@@ -130,17 +130,13 @@ class StatusModels(object):
         multiplied by probability of receiving that payment and compounded to
         the maturity of the loan
         '''
-        payout_prob = self.predict_payout_prob(X, X_sub_grade)        
+        payout_prob = self.get_payout_prob(X, X_sub_grade)        
         monthly_payments = self.get_monthly_payments(X_int_rate, date_range_length)
         compound_curve = self.get_compound_curve(X_int_rate, date_range_length)
 
         expected_cashflows = []
 
         for i in xrange(len(payout_prob)):
-
-            print payout_prob[i].shape
-            print monthly_payments[i].shape
-            print compound_curve[i].shape
             cashflow = payout_prob[i] * monthly_payments[i] * compound_curve[i]
             expected_cashflows.append(cashflow)
 
@@ -151,15 +147,15 @@ def main():
     # Load data, then pre-process
     print "Loading data..."
 
-    df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
-    df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
-    df_raw = pd.concat((df_3c, df_3b), axis=0)
+    # df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+    # df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    # df_raw = pd.concat((df_3c, df_3b), axis=0)
 
-    df = process_data(df_raw)
-    df = df[df['term'] == 36]
+    # df = process_data(df_raw)
+    # df = df[df['term'] == 36]
 
     # pickle.dump(df, open('../pickle/df_prediction.pkl', 'w'))
-    # df = pickle.load(open('../pickle/df_prediction.pkl', 'r'))
+    df = pickle.load(open('../pickle/df_prediction.pkl', 'r'))
 
 
     # Define scope
@@ -201,10 +197,10 @@ def main():
                          parameters={'n_estimators':100,
                                      'max_depth':10})
 
-    model.train_status_models(df, sub_grade_range, date_range, features)
+    # model.train_status_models(df, sub_grade_range, date_range, features)
     
     # pickle.dump(model.model_dict, open('../pickle/model_dict.pkl', 'w'))
-    # model.model_dict = pickle.load(open('../pickle/model_dict.pkl', 'r'))
+    model.model_dict = pickle.load(open('../pickle/model_dict.pkl', 'r'))
 
 
     # Testing cashflow projection
@@ -220,17 +216,17 @@ def main():
     X_int_rate = df_select['int_rate'].values[:2]
     X_id = df_select['id'].values[:2]
 
-    # predict_payout_prob(self, X, X_sub_grade):
+    # get_payout_prob(self, X, X_sub_grade):
     # calc_monthly_payments(self, loan_amnt, int_rate, term)
     # get_monthly_payments(self, X_int_rate, date_range_length)
     # get_compound_curve(self, X_int_rate, date_range_length)
 
-    # print 'payout_prob', model.predict_payout_prob(X, X_sub_grade) 
+    # print 'payout_prob', model.get_payout_prob(X, X_sub_grade) 
     # print 'monthly_payments', model.get_monthly_payments(X_int_rate, len(date_range))
     # print 'compound curve', model.get_compound_curve(X_int_rate, len(date_range))
 
     cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
-    print 'cashflows', cashflows
+    # print 'cashflows', cashflows
  
     IRR = np.array([((np.sum(item)) / 100) ** (1/3.) - 1 for item in cashflows])
 
@@ -241,6 +237,8 @@ def main():
     print np.concatenate((X_id[:, np.newaxis], X_sub_grade[:, np.newaxis], IRR[:, np.newaxis]), axis=1)
 
     # pickle.dump(IRR, open('../pickle/results_D.pkl', 'w'))
+
+
 
 
 if __name__ == '__main__':

@@ -63,6 +63,7 @@ def process_data(df_raw):
                                            'Default':0.08,
                                            'Charged Off':0.})
 
+    df = df[pd.notnull(df['int_rate'])]
     df['int_rate'] = df['int_rate'].map(lambda x: float(str(x).strip('%')) / 100)
 
     df['term'] = df['term'].map(lambda x: int(str(x).strip(' months')))
