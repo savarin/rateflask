@@ -83,6 +83,70 @@ class StatusModels(object):
         return np.array(payout_prob)
 
 
+    def calc_monthly_payments(self, loan_amnt, int_rate, term):
+        '''
+        Calculates monthly payments (principal + interest) for loan with specified
+        term and interest rate
+        '''
+        monthly_rate = int_rate / 12
+        date_range_length = term * 12
+
+        numerator = monthly_rate * ((1 + monthly_rate) ** date_range_length)
+        denominator = ((1 + monthly_rate) ** date_range_length) - 1
+
+        return loan_amnt * numerator / denominator
+
+
+    def get_monthly_payments(self, X_int_rate, date_range_length):
+        '''
+        Generates monthly payments for each loan
+        '''
+        monthly_payments = np.ones((X_int_rate.shape[0], date_range_length))
+
+        for i, int_rate in enumerate(X_int_rate):
+            monthly_payments[i] = (self.calc_monthly_payments(100, int_rate, 3)\
+                                    * monthly_payments[i])   
+
+        return monthly_payments
+
+
+    def get_compound_curve(self, X_int_rate, date_range_length):
+        '''
+        Generates compounding curve for each loan, assumes coupon reinvested in 
+        investment of similar return
+        '''
+        compound_curve = []
+        
+        for i, int_rate in enumerate(X_int_rate):
+            compound_curve.append(np.array([(1 + int_rate / 12)**(i-1) for i 
+                in xrange(date_range_length, 0, -1)]))
+
+        return np.array(compound_curve)
+
+
+    def get_expected_cashflows(self, X, X_sub_grade, X_int_rate, date_range_length):
+        '''
+        Generates expected cashflow for each loan, i.e. monthly payments 
+        multiplied by probability of receiving that payment and compounded to
+        the maturity of the loan
+        '''
+        payout_prob = self.predict_payout_prob(X, X_sub_grade)        
+        monthly_payments = self.get_monthly_payments(X_int_rate, date_range_length)
+        compound_curve = self.get_compound_curve(X_int_rate, date_range_length)
+
+        expected_cashflows = []
+
+        for i in xrange(len(payout_prob)):
+
+            print payout_prob[i].shape
+            print monthly_payments[i].shape
+            print compound_curve[i].shape
+            cashflow = payout_prob[i] * monthly_payments[i] * compound_curve[i]
+            expected_cashflows.append(cashflow)
+
+        return np.array(expected_cashflows)
+
+
 def main():
     # Load data, then pre-process
     print "Loading data..."
@@ -144,17 +208,39 @@ def main():
 
 
     # Testing cashflow projection
-    print "Testing cashflow projection..."
+    # print "Testing cashflow projection..."
+
+    sub_grade_range = ['D1']#, 'D2', 'D3', 'D4', 'D5']
 
     df_select = df[(df['sub_grade'].isin(sub_grade_range) 
                 & (df['issue_d'].isin(date_range)))]
 
-    X = df_select[features].values
-    X_sub_grade = df_select['sub_grade'].values
-    X_int_rate = df_select['int_rate'].values
-    X_id = df_select['id'].values
+    X = df_select[features].values[:2, :]
+    X_sub_grade = df_select['sub_grade'].values[:2]
+    X_int_rate = df_select['int_rate'].values[:2]
+    X_id = df_select['id'].values[:2]
 
-    print 'payout_prob', model.predict_payout_prob(X, X_sub_grade) 
+    # predict_payout_prob(self, X, X_sub_grade):
+    # calc_monthly_payments(self, loan_amnt, int_rate, term)
+    # get_monthly_payments(self, X_int_rate, date_range_length)
+    # get_compound_curve(self, X_int_rate, date_range_length)
+
+    # print 'payout_prob', model.predict_payout_prob(X, X_sub_grade) 
+    # print 'monthly_payments', model.get_monthly_payments(X_int_rate, len(date_range))
+    # print 'compound curve', model.get_compound_curve(X_int_rate, len(date_range))
+
+    cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
+    print 'cashflows', cashflows
+ 
+    IRR = np.array([((np.sum(item)) / 100) ** (1/3.) - 1 for item in cashflows])
+
+    print X_id.shape
+    print X_sub_grade.shape
+    print IRR.shape
+
+    print np.concatenate((X_id[:, np.newaxis], X_sub_grade[:, np.newaxis], IRR[:, np.newaxis]), axis=1)
+
+    # pickle.dump(IRR, open('../pickle/results_D.pkl', 'w'))
 
 
 if __name__ == '__main__':
