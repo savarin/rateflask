@@ -3,7 +3,8 @@ import pandas as pd
 from collections import defaultdict
 from sklearn.ensemble import RandomForestRegressor
 from scipy.optimize import curve_fit
-from rankingmodel import process_data, convert_to_array
+from preprocessing import dump_to_pickle, load_from_pickle, process_features, convert_to_array
+from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve, get_cashflows
 import pickle
 
 
@@ -52,76 +53,35 @@ class StatusModels(object):
         return np.exp(-x / beta)
 
 
-    def get_payout_prob(self, X, X_sub_grade):
+    def get_expected_payout(self, X, X_sub_grade):
         '''
         Predicts payout probability for whole date range
         '''
-        payout_prob = []
+        expected_payout = []
 
         for i, x in enumerate(X):
-            payout_prob_x = []
+            expected_payout_x = []
             for model in self.model_dict[X_sub_grade[i][0]]:
-                payout_prob_x.append(model.predict(x))
+                expected_payout_x.append(model.predict(x))
 
             # payout_prob_x gives the predicted probability of receiving payment
             # on specified month           
-            payout_prob_x = np.array(payout_prob_x).ravel()
-            payout_len = payout_prob_x.shape[0]
+            expected_payout_x = np.array(expected_payout_x).ravel()
+            payout_len = expected_payout_x.shape[0]
 
             beta = curve_fit(self.exponential_dist, 
                              np.arange(1, payout_len + 1),
-                             payout_prob_x)[0][0]
+                             expected_payout_x)[0][0]
 
             # payout_smooth_x gives the predicted probability after smoothing by
             # fitting to exponential curve with a negative coefficient
             # http://en.wikipedia.org/wiki/Exponential_distribution
-            payout_smooth_x = self.exponential_dist(np.arange(1, payout_len + 1),
+            smooth_payout_x = self.exponential_dist(np.arange(1, payout_len + 1),
                                                     beta)
 
-            payout_prob.append(payout_smooth_x)
+            expected_payout.append(smooth_payout_x)
 
-        return np.array(payout_prob)
-
-
-    def calc_monthly_payments(self, loan_amnt, int_rate, term):
-        '''
-        Calculates monthly payments (principal + interest) for loan with specified
-        term and interest rate
-        '''
-        monthly_rate = int_rate / 12
-        date_range_length = term * 12
-
-        numerator = monthly_rate * ((1 + monthly_rate) ** date_range_length)
-        denominator = ((1 + monthly_rate) ** date_range_length) - 1
-
-        return loan_amnt * numerator / denominator
-
-
-    def get_monthly_payments(self, X_int_rate, date_range_length):
-        '''
-        Generates monthly payments for each loan
-        '''
-        monthly_payments = np.ones((X_int_rate.shape[0], date_range_length))
-
-        for i, int_rate in enumerate(X_int_rate):
-            monthly_payments[i] = (self.calc_monthly_payments(100, int_rate, 3)\
-                                    * monthly_payments[i])   
-
-        return monthly_payments
-
-
-    def get_compound_curve(self, X_int_rate, date_range_length):
-        '''
-        Generates compounding curve for each loan, assumes coupon reinvested in 
-        investment of similar return
-        '''
-        compound_curve = []
-        
-        for i, int_rate in enumerate(X_int_rate):
-            compound_curve.append(np.array([(1 + int_rate / 12)**(i-1) for i 
-                in xrange(date_range_length, 0, -1)]))
-
-        return np.array(compound_curve)
+        return np.array(expected_payout)
 
 
     def get_expected_cashflows(self, X, X_sub_grade, X_int_rate, date_range_length):
@@ -130,17 +90,8 @@ class StatusModels(object):
         multiplied by probability of receiving that payment and compounded to
         the maturity of the loan
         '''
-        payout_prob = self.get_payout_prob(X, X_sub_grade)        
-        monthly_payments = self.get_monthly_payments(X_int_rate, date_range_length)
-        compound_curve = self.get_compound_curve(X_int_rate, date_range_length)
-
-        expected_cashflows = []
-
-        for i in xrange(len(payout_prob)):
-            cashflow = payout_prob[i] * monthly_payments[i] * compound_curve[i]
-            expected_cashflows.append(cashflow)
-
-        return np.array(expected_cashflows)
+        payout_expected = self.get_expected_payout(X, X_sub_grade)        
+        return get_cashflows(payout_expected, X_int_rate, date_range_length)
 
 
 def main():
@@ -151,12 +102,11 @@ def main():
     # df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
     # df_raw = pd.concat((df_3c, df_3b), axis=0)
 
-    # df = process_data(df_raw)
+    # df = process_features(df_raw)
     # df = df[df['term'] == 36]
 
-    # pickle.dump(df, open('../pickle/df_prediction.pkl', 'w'))
-    df = pickle.load(open('../pickle/df_prediction.pkl', 'r'))
-
+    # dump_to_pickle(df, '../pickle/df_prediction.pkl')
+    df = load_from_pickle('../pickle/df_prediction.pkl')
 
     # Define scope
     print "Setting scope..."
@@ -199,14 +149,12 @@ def main():
 
     # model.train_status_models(df, sub_grade_range, date_range, features)
     
-    # pickle.dump(model.model_dict, open('../pickle/model_dict.pkl', 'w'))
-    model.model_dict = pickle.load(open('../pickle/model_dict.pkl', 'r'))
+    # dump_to_pickle(model, '../pickle/predictionmodel.pkl')
+    model.model_dict = load_from_pickle('../pickle/model_dict.pkl')
 
 
     # Testing cashflow projection
-    # print "Testing cashflow projection..."
-
-    sub_grade_range = ['D1']#, 'D2', 'D3', 'D4', 'D5']
+    print "Testing cashflow projection..."
 
     df_select = df[(df['sub_grade'].isin(sub_grade_range) 
                 & (df['issue_d'].isin(date_range)))]
@@ -216,29 +164,9 @@ def main():
     X_int_rate = df_select['int_rate'].values[:2]
     X_id = df_select['id'].values[:2]
 
-    # get_payout_prob(self, X, X_sub_grade):
-    # calc_monthly_payments(self, loan_amnt, int_rate, term)
-    # get_monthly_payments(self, X_int_rate, date_range_length)
-    # get_compound_curve(self, X_int_rate, date_range_length)
-
-    # print 'payout_prob', model.get_payout_prob(X, X_sub_grade) 
-    # print 'monthly_payments', model.get_monthly_payments(X_int_rate, len(date_range))
-    # print 'compound curve', model.get_compound_curve(X_int_rate, len(date_range))
-
     cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
-    # print 'cashflows', cashflows
- 
-    IRR = np.array([((np.sum(item)) / 100) ** (1/3.) - 1 for item in cashflows])
-
-    print X_id.shape
-    print X_sub_grade.shape
-    print IRR.shape
-
-    print np.concatenate((X_id[:, np.newaxis], X_sub_grade[:, np.newaxis], IRR[:, np.newaxis]), axis=1)
-
-    # pickle.dump(IRR, open('../pickle/results_D.pkl', 'w'))
-
-
+    
+    print cashflows
 
 
 if __name__ == '__main__':
