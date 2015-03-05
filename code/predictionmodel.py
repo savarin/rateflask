@@ -61,6 +61,9 @@ class StatusModels(object):
 
         for i, x in enumerate(X):
             expected_payout_x = []
+            # X_sub_grade returns a list of sub_grades, X_sub_grade[i][0]
+            # returns the string signifying the grade part of the sub_grade,
+            # e.g. if X_sub_grade[0] is 'A1', X_sub_grade[0][0] is 'A'.
             for model in self.model_dict[X_sub_grade[i][0]]:
                 expected_payout_x.append(model.predict(x))
 
@@ -105,7 +108,7 @@ def main():
     df = process_features(df_raw)
     df = df[df['term'] == 36]
 
-    # dump_to_pickle(df, '../pickle/df_prediction.pkl')
+    dump_to_pickle(df, '../pickle/df_prediction.pkl')
     # df = load_from_pickle('../pickle/df_prediction.pkl')
 
     # Define scope
@@ -140,17 +143,17 @@ def main():
                 'home_own_other', 'home_own_own', 'home_own_rent']
 
 
-    # Train models for every sub-grade for every month
+    # Train models for every grade for every month
     print "Training models..."
 
     model = StatusModels(model=RandomForestRegressor,
                          parameters={'n_estimators':100,
                                      'max_depth':10})
 
-    # model.train_status_models(df, sub_grade_range, date_range, features)
+    model.train_status_models(df, sub_grade_range, date_range, features)
     
-    # dump_to_pickle(model, '../pickle/predictionmodel.pkl')
-    # model = load_from_pickle('../pickle/predictionmodel_dict.pkl')
+    dump_to_pickle(model, '../pickle/predictionmodel.pkl')
+    # model = load_from_pickle('../pickle/predictionmodel.pkl')
 
 
     # Testing cashflow projection
@@ -160,14 +163,15 @@ def main():
                 & (df['issue_d'].isin(date_range)))]
 
     # Test on fraction of dataset
-    X = df_select[features].values[:2, :]
-    X_sub_grade = df_select['sub_grade'].values[:2]
-    X_int_rate = df_select['int_rate'].values[:2]
-    X_id = df_select['id'].values[:2]
+    X = df_select[features].values
+    X_sub_grade = df_select['sub_grade'].values
+    X_int_rate = df_select['int_rate'].values
+    X_id = df_select['id'].values
 
     cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
     
-    print cashflows
+    IRR = [(np.sum(item))**(1/3.) - 1 for item in cashflows]
+    dump_to_pickle(IRR, '../pickle/IRR.pkl')
 
 
 if __name__ == '__main__':
