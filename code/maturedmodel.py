@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from preprocessing import dump_to_pickle, load_from_pickle, process_payment
-from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve
+from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve, get_cashflows
 
 
 def get_actual_payout(X, date_range_length):
@@ -18,7 +18,7 @@ def get_actual_payout(X, date_range_length):
             payout_actual_x = [1] * date_range_length
             payout_actual.append(payout_actual_x)
         else:
-            payout_actual_x = [1] * x[1]
+            payout_actual_x = [1] * int(x[1])
             payout_actual_x.append(x[2])
 
             m = len(payout_actual_x)
@@ -40,21 +40,28 @@ def get_actual_cashflows(X, X_int_rate, date_range_length):
     return get_cashflows(payout_actual, X_int_rate, date_range_length)
 
 
-def matured_IRR(df, actual_rate=True, rate_dict={}, date_range_length):
+def matured_IRR(df_raw, date_range_length, actual_rate=True, rate_dict={}):
     '''
     Calculates IRR for loans that have already matured.
     '''
-    df_select = process_payment(df)
+    df = process_payment(df_raw)
 
-    X = df_select[['default_status', 'months_paid', 'residual', 'recovery']].values
+    X = df[['default_status', 'months_paid', 'residual', 'recovery']].values
 
     if actual_rate:
-        X_int_rate = df['int_rate'].map(lambda x: float(str(x).strip('%')) / 100).values
+        X_int_rate = df_raw['int_rate'].map(lambda x: float(str(x).strip('%')) / 100).values
     else:
-        X_int_rate = df['sub_grade'].map(rate_dict).values
+        X_int_rate = df_raw['sub_grade'].map(rate_dict).values
 
-
+    loan_id = df_raw['id'].values
     actual_cashflows = get_actual_cashflows(X, X_int_rate, date_range_length)
+
+    results = []
+
+    for item in actual_cashflows:
+        results.append(np.sum(item)**(1/3.) - 1)
+
+    return results
 
 
 def main():
@@ -68,7 +75,12 @@ def main():
          | (df['issue_d'].str.contains('2010')) \
          | (df['issue_d'].str.contains('2011'))]
 
-    IRR = matured_IRR(df)
+    # df = df.iloc[:10, :]
+
+    IRR = matured_IRR(df, 36, True)
+    print IRR
+
+    # dump_to_pickle(IRR, '../pickle/matured_IRR.pkl')
 
 
 if __name__ == '__main__':

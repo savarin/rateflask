@@ -98,15 +98,15 @@ def main():
     # Load data, then pre-process
     print "Loading data..."
 
-    # df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
-    # df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
-    # df_raw = pd.concat((df_3c, df_3b), axis=0)
+    df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+    df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    df_raw = pd.concat((df_3c, df_3b), axis=0)
 
-    # df = process_features(df_raw)
-    # df = df[df['term'] == 36]
+    df = process_features(df_raw)
+    df = df[df['term'] == 36]
 
     # dump_to_pickle(df, '../pickle/df_prediction.pkl')
-    df = load_from_pickle('../pickle/df_prediction.pkl')
+    # df = load_from_pickle('../pickle/df_prediction.pkl')
 
     # Define scope
     print "Setting scope..."
@@ -150,7 +150,7 @@ def main():
     # model.train_status_models(df, sub_grade_range, date_range, features)
     
     # dump_to_pickle(model, '../pickle/predictionmodel.pkl')
-    model.model_dict = load_from_pickle('../pickle/model_dict.pkl')
+    # model = load_from_pickle('../pickle/predictionmodel_dict.pkl')
 
 
     # Testing cashflow projection
@@ -159,6 +159,7 @@ def main():
     df_select = df[(df['sub_grade'].isin(sub_grade_range) 
                 & (df['issue_d'].isin(date_range)))]
 
+    # Test on fraction of dataset
     X = df_select[features].values[:2, :]
     X_sub_grade = df_select['sub_grade'].values[:2]
     X_int_rate = df_select['int_rate'].values[:2]

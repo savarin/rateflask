@@ -22,29 +22,29 @@ def get_monthly_payments(X_int_rate, date_range_length):
     monthly_payments = np.ones((X_int_rate.shape[0], date_range_length))
 
     for i, int_rate in enumerate(X_int_rate):
-        monthly_payments[i] = (calc_monthly_payments(1, int_rate, 3)\
-                                * monthly_payments[i])   
+        monthly_payments[i] = (calc_monthly_payments(1, int_rate, 3)
+                               * monthly_payments[i])
 
     return monthly_payments
 
 
 def get_compound_curve(X_int_rate, date_range_length):
     '''
-    Generates compounding curve for each loan, assumes coupon reinvested in 
+    Generates compounding curve for each loan, assumes coupon reinvested in
     investment of similar return
     '''
     compound_curve = []
-    
+
     for i, int_rate in enumerate(X_int_rate):
-        compound_curve.append(np.array([(1 + int_rate / 12)**(i-1) for i 
-            in xrange(date_range_length, 0, -1)]))
+        compound_curve.append(np.array([(1 + int_rate / 12)**(i-1) for i
+                                        in xrange(date_range_length, 0, -1)]))
 
     return np.array(compound_curve)
 
 
 def get_cashflows(payout_curve, X_int_rate, date_range_length):
     '''
-    Generates expected cashflow for each loan, i.e. monthly payments 
+    Generates expected cashflow for each loan, i.e. monthly payments
     multiplied by probability of receiving that payment and compounded to
     the maturity of the loan
     '''

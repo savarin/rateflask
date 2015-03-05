@@ -18,9 +18,9 @@ def process_features(df_raw):
     Processes raw data - fills missing values and map to numerical format.
 
     Heuristics:
-    loan_status - proceeds reinvested in investment with same risk-return profile
+    loan_status - proceeds reinvested in investment of same risk-return profile
     https://www.lendingclub.com/info/demand-and-credit-profile.action
-    
+
     emp_length - 10 if >10 yrs, average if n/a
     earliest_cr_line - converted to length of time b/w first credit line and 
         date of loan issuance, issuance date of loan if n/a
@@ -34,12 +34,12 @@ def process_features(df_raw):
                  'delinq_2yrs', 'pub_rec', 'collections_12_mths_ex_med',
                  'purpose', 'home_ownership']]
 
-    df['loan_status'] = df['loan_status'].map({'Fully Paid':1., 'Current':1., 
-                                           'In Grace Period':0.76, 
-                                           'Late (16-30 days)':0.49, 
-                                           'Late (31-120 days)':0.28, 
-                                           'Default':0.08,
-                                           'Charged Off':0.})
+    df['loan_status'] = df['loan_status'].map({'Fully Paid': 1., 'Current': 1., 
+                                               'In Grace Period': 0.76, 
+                                               'Late (16-30 days)': 0.49, 
+                                               'Late (31-120 days)': 0.28, 
+                                               'Default': 0.08,
+                                               'Charged Off': 0.})
 
     # Rows with missing interest rates appear to be corrupted, only in 3a
     df = df[pd.notnull(df['int_rate'])]
@@ -60,11 +60,10 @@ def process_features(df_raw):
     df['fico_range_low'] = (df['fico_range_low'] + df['fico_range_high']) / 2.
     df.rename(columns={'fico_range_low': 'fico'}, inplace=True)
 
-    
-    df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x:\
-                                x['issue_d'] if pd.isnull(x['earliest_cr_line']) \
+    df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x: 
+                                x['issue_d'] if pd.isnull(x['earliest_cr_line']) 
                                              else x['earliest_cr_line'], axis=1)
-    df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x:\
+    df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x: \
                                 (datetime.strptime(x['issue_d'], '%b-%Y') \
                                 - datetime.strptime(x['earliest_cr_line'], '%b-%Y')).days / 30, axis=1)
 
