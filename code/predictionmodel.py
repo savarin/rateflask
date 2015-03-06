@@ -102,8 +102,10 @@ class StatusModels(object):
         '''
         Calculates IRR for loans that have not yet matured.
         '''
+        term = 3
+        date_range_length = term * 12
+
         X = df[features].values
-        date_range_length = 36
 
         if actual_rate:
             X_int_rate = df['int_rate'].values
@@ -116,7 +118,7 @@ class StatusModels(object):
                                                           X_sub_grade,
                                                           date_range_length)
 
-        return calc_IRR(expected_cashflows)
+        return calc_IRR(expected_cashflows, term)
 
 
 def main_fit():
@@ -196,7 +198,7 @@ def main_predict():
     df_3a = pd.read_csv('../data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
     df_raw = df_3a.copy()
     
-    df = process_features(df_raw, False)
+    df = process_features(df_raw, True, False)
 
     # dump_to_pickle(df, '../pickle/df.pkl')
     # df = load_from_pickle('../pickle/df.pkl').iloc[:2, :]

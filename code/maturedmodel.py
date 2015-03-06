@@ -37,6 +37,7 @@ def get_actual_cashflows(X, X_int_rate, date_range_length):
     of the loan
     '''
     payout_actual = get_actual_payout(X, date_range_length)
+
     return get_cashflows(payout_actual, X_int_rate, date_range_length)
 
 
@@ -44,8 +45,10 @@ def actual_IRR(df, actual_rate=True, rate_dict={}):
     '''
     Calculates IRR for loans that have already matured.
     '''
+    term = 3
+    date_range_length = term * 12
+
     X = df[['default_status', 'months_paid', 'residual', 'recovery']].values
-    date_range_length = 36
 
     if actual_rate:
         X_int_rate = df['int_rate'].values
@@ -54,7 +57,7 @@ def actual_IRR(df, actual_rate=True, rate_dict={}):
 
     actual_cashflows = get_actual_cashflows(X, X_int_rate, date_range_length)
 
-    return calc_IRR(actual_cashflows)
+    return calc_IRR(actual_cashflows, term)
 
 
 def main_actual():

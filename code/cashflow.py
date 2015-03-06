@@ -20,9 +20,10 @@ def get_monthly_payments(X_int_rate, date_range_length):
     Generates monthly payments for each loan.
     '''
     monthly_payments = np.ones((X_int_rate.shape[0], date_range_length))
+    term = date_range_length / 12
 
     for i, int_rate in enumerate(X_int_rate):
-        monthly_payments[i] = (calc_monthly_payments(1, int_rate, 3)
+        monthly_payments[i] = (calc_monthly_payments(1, int_rate, term)
                                * monthly_payments[i])
 
     return monthly_payments
@@ -61,8 +62,8 @@ def get_cashflows(payout_curve, X_int_rate, date_range_length):
 
 
 
-def calc_IRR(cashflows):
+def calc_IRR(cashflows, term):
     '''
     Calculates 3-year IRR from generated cashflows.
     '''
-    return [np.sum(cashflow)**(1./3) - 1 for cashflow in cashflows]
+    return [np.sum(cashflow)**(1./term) - 1 for cashflow in cashflows]+
