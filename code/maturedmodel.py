@@ -56,12 +56,7 @@ def matured_IRR(df_raw, date_range_length, actual_rate=True, rate_dict={}):
     loan_id = df_raw['id'].values
     actual_cashflows = get_actual_cashflows(X, X_int_rate, date_range_length)
 
-    results = []
-
-    for item in actual_cashflows:
-        results.append(np.sum(item)**(1/3.) - 1)
-
-    return results
+    return actual_cashflows
 
 
 def main_basic():
@@ -74,8 +69,6 @@ def main_basic():
     df = df[(df['issue_d'].str.contains('2009')) \
          | (df['issue_d'].str.contains('2010')) \
          | (df['issue_d'].str.contains('2011'))]
-
-    # df = df.iloc[:10, :]
 
     IRR = matured_IRR(df, 36, True)
     print IRR
@@ -95,31 +88,35 @@ def main_recent():
          | (df['issue_d'].str.contains('2010')) \
          | (df['issue_d'].str.contains('2011'))]
 
-    int_rate_dict = {'A1':0.060299999999999999,
-                     'A2':0.064899999999999999,
-                     'A3':0.069900000000000004,
-                     'A4':0.074900000000000008,
-                     'A5':0.081900000000000001,
-                     'B1':0.086699999999999999,
-                     'B2':0.094899999999999998,
-                     'B3':0.10490000000000001,
+    int_rate_dict = {'A1':0.0603,
+                     'A2':0.0649,
+                     'A3':0.0699,
+                     'A4':0.0749,
+                     'A5':0.0819,
+                     'B1':0.0867,
+                     'B2':0.0949,
+                     'B3':0.1049,
                      'B4':0.1144,
-                     'B5':0.11990000000000001,
-                     'C1':0.12390000000000001,
-                     'C2':0.12990000000000002,
+                     'B5':0.1199,
+                     'C1':0.1239,
+                     'C2':0.1299,
                      'C3':0.1366,
                      'C4':0.1431,
-                     'C5':0.14990000000000001,
-                     'D1':0.15590000000000001,
-                     'D2':0.15990000000000001,
-                     'D3':0.16489999999999999,
+                     'C5':0.1499,
+                     'D1':0.1559,
+                     'D2':0.1599,
+                     'D3':0.1649,
                      'D4':0.1714,
-                     'D5':0.17859999999999998}
+                     'D5':0.1786}
 
-    IRR = matured_IRR(df, 36, False, int_rate_dict)
+    
+    print "Generating cashflows..."
+    actual_cashflows = matured_IRR(df, 36, False, int_rate_dict)
 
-    dump_to_pickle(IRR, '../pickle/matured_IRR_recent.pkl')
+    print "Calculating IRR..."
+    dump_to_pickle(IRR, '../pickle/IRR_matured_actual.pkl')
 
 
 if __name__ == '__main__':
-    main()
+    # main_basic()
+    main_recent()

@@ -3,9 +3,12 @@ import pandas as pd
 from collections import defaultdict
 from sklearn.ensemble import RandomForestRegressor
 from scipy.optimize import curve_fit
-from preprocessing import dump_to_pickle, load_from_pickle, process_features, convert_to_array
-from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve, get_cashflows
 import pickle
+from preprocessing import dump_to_pickle, load_from_pickle, process_features, 
+                          convert_to_array
+from cashflow import calc_monthly_payments, get_monthly_payments, 
+                     get_compound_curve, get_cashflows, calc_IRR
+
 
 
 class StatusModels(object):
@@ -158,7 +161,7 @@ def main_current():
 
 
     # Testing cashflow projection
-    print "Testing cashflow projection..."
+    print "Generating cashflows..."
 
     df_select = df[(df['sub_grade'].isin(sub_grade_range) 
                 & (df['issue_d'].isin(date_range)))]
@@ -168,8 +171,12 @@ def main_current():
     X_int_rate = df_select['int_rate'].values
     X_id = df_select['id'].values
 
-    cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
-    IRR = [(np.sum(item))**(1/3.) - 1 for item in cashflows]
+    expected_cashflows = model.get_expected_cashflows(X, X_sub_grade, 
+                                                      X_int_rate, 
+                                                      len(date_range))
+    
+    print "Calculating IRR..."
+    IRR = calc_IRR(expected_cashflows)
     
     # dump_to_pickle(IRR, '../pickle/IRRcurrent.pkl')
 
@@ -269,10 +276,12 @@ def main_matured():
     X_int_rate = df_select['sub_grade'].map(int_rate_dict).values
     X_id = df_select['id'].values
 
-    cashflows = model.get_expected_cashflows(X, X_sub_grade, X_int_rate, len(date_range))
+    expected_cashflows = model.get_expected_cashflows(X, X_sub_grade, 
+                                                      X_int_rate, 
+                                                      len(date_range))
     
-    print "Calculating IRR"
-    IRR = [(np.sum(item))**(1/3.) - 1 for item in cashflows]
+    print "Calculating IRR..."
+    IRR = calc_IRR(expected_cashflows)
     dump_to_pickle(IRR, '../pickle/IRR_matured_predicted.pkl')
 
 

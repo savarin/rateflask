@@ -4,7 +4,7 @@ import numpy as np
 def calc_monthly_payments(loan_amnt, int_rate, term):
     '''
     Calculates monthly payments (principal + interest) for loan with specified
-    term and interest rate
+    term and interest rate.
     '''
     monthly_rate = int_rate / 12
     date_range_length = term * 12
@@ -17,7 +17,7 @@ def calc_monthly_payments(loan_amnt, int_rate, term):
 
 def get_monthly_payments(X_int_rate, date_range_length):
     '''
-    Generates monthly payments for each loan
+    Generates monthly payments for each loan.
     '''
     monthly_payments = np.ones((X_int_rate.shape[0], date_range_length))
 
@@ -31,7 +31,7 @@ def get_monthly_payments(X_int_rate, date_range_length):
 def get_compound_curve(X_int_rate, date_range_length):
     '''
     Generates compounding curve for each loan, assumes coupon reinvested in
-    investment of similar return
+    investment of similar return.
     '''
     compound_curve = []
 
@@ -44,9 +44,9 @@ def get_compound_curve(X_int_rate, date_range_length):
 
 def get_cashflows(payout_curve, X_int_rate, date_range_length):
     '''
-    Generates expected cashflow for each loan, i.e. monthly payments
-    multiplied by probability of receiving that payment and compounded to
-    the maturity of the loan
+    Generates cashflow for each loan, i.e. monthly payments multiplied by 
+    probability (or actuality if loan has matured) of receiving that payment and 
+    compounded to the maturity of the loan.
     '''
     monthly_payments = get_monthly_payments(X_int_rate, date_range_length)
     compound_curve = get_compound_curve(X_int_rate, date_range_length)
@@ -58,3 +58,11 @@ def get_cashflows(payout_curve, X_int_rate, date_range_length):
         cashflow_array.append(cashflow)
 
     return np.array(cashflow_array)
+
+
+
+def calc_IRR(cashflows):
+    '''
+    Calculates 3-year IRR from generated cashflows.
+    '''
+    return [(np.sum(cashflow)**(1./3) - 1 for cashflow in cashflows]
