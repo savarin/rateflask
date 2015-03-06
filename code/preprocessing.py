@@ -1,9 +1,8 @@
 
-import pickle
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
+import pickle
 
 def dump_to_pickle(file_object, file_path):
     pickle.dump(file_object, open(file_path, 'w'))
@@ -18,10 +17,11 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
     Restricts data to loans of grades A, B, C, and D of desired issue dates, 
     then processes data by filling missing values and map to numerical format.
 
-    Heuristics on features:
+    Heuristics on labels:
     loan_status - proceeds reinvested in investment of same risk-return profile
-    https://www.lendingclub.com/info/demand-and-credit-profile.action
-
+        https://www.lendingclub.com/info/demand-and-credit-profile.action
+    
+    Heuristics on features:
     emp_length - 10 if >10 yrs, average if n/a
     earliest_cr_line - converted to length of time b/w first credit line and 
         date of loan issuance, issuance date of loan if n/a
@@ -30,7 +30,7 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
     grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
     term_mask = df_raw['term'].str.contains('36', na=False)
     
-    if restrict date:
+    if restrict_date:
         if current_loans:
             date_mask = (df_raw['issue_d'].str.contains('2012', na=False)) \
                          | (df_raw['issue_d'].str.contains('2013', na=False)) \
@@ -158,68 +158,8 @@ def process_payment(df_raw):
                'default_status', 'months_paid', 'residual', 'recovery']]
 
 
-def process_requests(df_search, df_get):
-    '''
-    Process data received from API requests, to enable result to be passed
-    through process_features
-    '''
-    df_search = df_search[['loan_id', 'loanGrade', 'loanRate', 
-                           'loanAmountRequested', 'loanLength', 'fico', 'purpose']]
-
-    df_get = df_get[['completeTenure', 'grossIncome', 'DTI', 
-                     'earliestCreditLine', 'openCreditLines', 'totalCreditLines', 
-                     'revolvingCreditBalance', 'revolvingLineUtilization', 
-                     'inquiriesLast6Months', 'lateLast2yrs', 'publicRecordsOnFile', 
-                     'collectionsExcludingMedical', 'homeOwnership']]
-
-    df_raw = pd.concat((df_search, df_get), axis=1)
-
-
-    # Introduce new features, not in API request
-    df_raw['grade'] = df_raw['loanGrade'].map(lambda x: x[0])
-    df_raw['issue_d'] = datetime.now().strftime('%b-%Y')
-    df_raw['loan_status'] = 'Current'
-    df_raw['fico_range_high'] = df_raw['fico'].map(lambda x: int(x.split('-')[1]))
-
-
-    # Reformat existing features
-    df_raw['loanLength'] = df_raw['loanLength'].map(lambda x: str(x))
-    df_raw['grossIncome'] = df_raw['grossIncome']\
-                .map(lambda x: int(re.sub("[^0-9]", "", x)) * 12)
-    df_raw['fico'] = df_raw['fico'].map(lambda x: int(x.split('-')[0]))
-    df_raw['earliestCreditLine'] = df_raw['earliestCreditLine']\
-                .map(lambda x: datetime.strptime(x, '%m/%Y').strftime('%b-%Y'))
-    df_raw['revolvingCreditBalance'] = df_raw['revolvingCreditBalance']\
-                .map(lambda x: int(re.sub("[^0-9]", "", x)) / 100)
-
-
-    # Reorder and rename columns
-    df_raw = df_raw[['loan_id', 'grade', 'loanGrade', 'issue_d', 'loan_status', 'loanRate',
-             'loanAmountRequested', 'loanLength', 
-             'completeTenure', 'grossIncome', 'DTI',
-             'fico', 'fico_range_high', 'earliestCreditLine',
-             'openCreditLines', 'totalCreditLines', 'revolvingCreditBalance', 'revolvingLineUtilization', 'inquiriesLast6Months',
-             'lateLast2yrs', 'publicRecordsOnFile', 'collectionsExcludingMedical',
-             'purpose', 'homeOwnership']]
-
-    df_raw.columns = ['id', 'grade', 'sub_grade', 'issue_d', 'loan_status', 'int_rate',
-                  'loan_amnt', 'term', 
-                  'emp_length', 'annual_inc', 'dti',
-                  'fico_range_low', 'fico_range_high', 'earliest_cr_line',
-                  'open_acc', 'total_acc', 'revol_bal', 'revol_util', 'inq_last_6mths', 
-                  'delinq_2yrs', 'pub_rec', 'collections_12_mths_ex_med',
-                  'purpose', 'home_ownership']
-
-    return df_raw
-
-
-def convert_to_array(df,
-                     date_range,
-                     features,
-                     create_label=False,
-                     label='sub_grade',
-                     label_one='A1',
-                     label_zero='D5'):
+def convert_to_array(df, date_range, features, create_label=False, 
+                     label='sub_grade', label_one='A1', label_zero='D5'):
     '''
     Converts dataframe to array, with option to create target column
     '''

@@ -9,7 +9,6 @@ from cashflow import calc_monthly_payments, get_monthly_payments, \
                      get_compound_curve, get_cashflows, calc_IRR
 
 
-
 class StatusModels(object):
     def __init__(self,
                  model=RandomForestRegressor(),

@@ -95,6 +95,8 @@ def main():
     y_predict = model.predict(X_test)
     print np.sum(y_predict == y_test) / float(len(y_test))
 
+    print model.model.feature_importances_
+
 
 if __name__ == '__main__':
     main()
