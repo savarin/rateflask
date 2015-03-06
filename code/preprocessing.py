@@ -13,11 +13,12 @@ def load_from_pickle(file_path):
     return pickle.load(open(file_path, 'r'))
 
 
-def process_features(df_raw):
+def process_features(df_raw, current_loans=True):
     '''
-    Processes raw data - fills missing values and map to numerical format.
+    Restricts data to loans of grades A, B, C, and D of desired issue dates, 
+    then processes data by filling missing values and map to numerical format.
 
-    Heuristics:
+    Heuristics on features:
     loan_status - proceeds reinvested in investment of same risk-return profile
     https://www.lendingclub.com/info/demand-and-credit-profile.action
 
@@ -26,6 +27,21 @@ def process_features(df_raw):
         date of loan issuance, issuance date of loan if n/a
     revol_util - missing values filled in by average
     '''
+    grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
+    term_mask = df_raw['term'].str.contains('36', na=False)
+    
+    if current_loans:
+        date_mask = (df_raw['issue_d'].str.contains('2012', na=False)) \
+                     | (df_raw['issue_d'].str.contains('2013', na=False)) \
+                     | (df_raw['issue_d'].str.contains('2014', na=False))
+    else:
+        date_mask = (df_raw['issue_d'].str.contains('2009', na=False)) \
+                     | (df_raw['issue_d'].str.contains('2010', na=False)) \
+                     | (df_raw['issue_d'].str.contains('2011', na=False))
+
+
+    df_raw = df_raw[grade_mask & term_mask & date_mask]
+
     df = df_raw[['id', 'grade', 'sub_grade', 'issue_d', 'loan_status', 'int_rate',
                  'loan_amnt', 'term', 
                  'emp_length', 'annual_inc', 'dti',
@@ -94,7 +110,16 @@ def process_payment(df_raw):
     '''
     Process payment information pertaining to matured loans.
     '''
-    df = df_raw[['id', 'installment']]
+    grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
+    term_mask = df_raw['term'].str.contains('36', na=False)
+    date_mask = (df_raw['issue_d'].str.contains('2009', na=False)) \
+                | (df_raw['issue_d'].str.contains('2010', na=False)) \
+                | (df_raw['issue_d'].str.contains('2011', na=False))
+
+    df_raw = df_raw[grade_mask & term_mask & date_mask]
+
+    df = df_raw[['id', 'sub_grade', 'installment']]
+    df['int_rate'] = df_raw['int_rate'].map(lambda x: float(str(x).strip('%')) / 100).values
 
     # Residual amount for current loans and those in grace period under
     # consideration are sufficiently small and considered fully paid
@@ -127,10 +152,11 @@ def process_payment(df_raw):
                             .apply(lambda x: (x['total_at_maturity'] \
                                               / x['installment']), axis=1)
 
-    return df[['default_status', 'months_paid', 'residual', 'recovery']]
+    return df[['sub_grade', 'int_rate', 
+               'default_status', 'months_paid', 'residual', 'recovery']]
 
 
-def convert_to_array(data,
+def convert_to_array(df,
                      date_range,
                      features,
                      create_label=False,
@@ -140,14 +166,14 @@ def convert_to_array(data,
     '''
     Converts dataframe to array, with option to create target column
     '''
-    date_mask = data['issue_d'].isin(date_range)
+    date_mask = df['issue_d'].isin(date_range)
 
     if create_label:
-        label_mask = data[label].isin([label_one, label_zero])
-        X = data[date_mask & label_mask][features].values
-        y = data[date_mask & label_mask][label].map({label_one:1, label_zero:0}).values 
+        label_mask = df[label].isin([label_one, label_zero])
+        X = df[date_mask & label_mask][features].values
+        y = df[date_mask & label_mask][label].map({label_one:1, label_zero:0}).values 
     else:
-        X = data[date_mask][features].values
-        y = data[date_mask][label].values 
+        X = df[date_mask][features].values
+        y = df[date_mask][label].values 
 
     return X, y

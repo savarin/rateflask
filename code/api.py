@@ -27,6 +27,7 @@ def request_loan_data(club, filter_search):
 
 
 def main():
+    print "Initializing APIs..."
     club = LendingClub()
     club.authenticate()
 
@@ -49,6 +50,31 @@ def main():
                             'term': {'Year3': True, 'Year5': False}})
 
     loan_results, loan_details = request_loan_data(club, filter_search)
+
+    collection_search.insert(loan_results)
+    collection_get.insert(loan_details)
+
+
+
+    # PROCESS DATA
+    # PROCESS DATA
+    # PROCESS DATA
+
+
+    # trends - simply list of length 10
+
+    # conn = psycopg2.connect(dbname='lend', user='postgres', host='/tmp')
+    # c = conn.cursor()
+
+    # c.execute(
+    #     ''' 
+    #     INSERT INTO trends
+    #     VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+    #     '''.format(*trends)
+    # )
+
+    # conn.commit()
+    # conn.close()
 
 
 if __name__ == '__main__':

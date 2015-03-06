@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from preprocessing import dump_to_pickle, load_from_pickle, process_payment
-from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve, get_cashflows
+from cashflow import calc_monthly_payments, get_monthly_payments, get_compound_curve, get_cashflows, calc_IRR
 
 
 def get_actual_payout(X, date_range_length):
@@ -40,83 +40,71 @@ def get_actual_cashflows(X, X_int_rate, date_range_length):
     return get_cashflows(payout_actual, X_int_rate, date_range_length)
 
 
-def matured_IRR(df_raw, date_range_length, actual_rate=True, rate_dict={}):
+def actual_IRR(df, actual_rate=True, rate_dict={}):
     '''
     Calculates IRR for loans that have already matured.
     '''
-    df = process_payment(df_raw)
-
     X = df[['default_status', 'months_paid', 'residual', 'recovery']].values
+    date_range_length = 36
 
     if actual_rate:
-        X_int_rate = df_raw['int_rate'].map(lambda x: float(str(x).strip('%')) / 100).values
+        X_int_rate = df['int_rate'].values
     else:
-        X_int_rate = df_raw['sub_grade'].map(rate_dict).values
+        X_int_rate = df['sub_grade'].map(rate_dict).values
 
-    loan_id = df_raw['id'].values
     actual_cashflows = get_actual_cashflows(X, X_int_rate, date_range_length)
 
-    return actual_cashflows
+    return calc_IRR(actual_cashflows)
 
 
-def main_basic():
+def main_actual():
+    # Load data, then pre-process
+    print "Loading data..."
+
     df_3a = pd.read_csv('../data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
+    df_raw = df_3a.copy()
 
-    df = df_3a.copy()
-    df = df[df['term'].str.contains('36', na=False)]
-    df = df[df['grade'].isin(['A', 'B', 'C', 'D'])]
+    df = process_payment(df_raw)
+
+
+    # Calculating actual IRR for loans already matured with actual int_rate    
+    print "Calculating IRR..."
     
-    df = df[(df['issue_d'].str.contains('2009')) \
-         | (df['issue_d'].str.contains('2010')) \
-         | (df['issue_d'].str.contains('2011'))]
-
-    IRR = matured_IRR(df, 36, True)
-    print IRR
-
+    IRR = actual_IRR(df, True)
+    
+    print IRR[:2]
     # dump_to_pickle(IRR, '../pickle/matured_IRR.pkl')
 
 
 def main_recent():
-    # Replace int_rate with values in Dec 2015
+    # Load data, then pre-process
+    print "Loading data..."
+
     df_3a = pd.read_csv('../data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
-
-    df = df_3a.copy()
-    df = df[df['term'].str.contains('36', na=False)]
-    df = df[df['grade'].isin(['A', 'B', 'C', 'D'])]
+    df_raw = df_3a.copy()
     
-    df = df[(df['issue_d'].str.contains('2009')) \
-         | (df['issue_d'].str.contains('2010')) \
-         | (df['issue_d'].str.contains('2011'))]
+    df = process_payment(df_raw)
 
-    int_rate_dict = {'A1':0.0603,
-                     'A2':0.0649,
-                     'A3':0.0699,
-                     'A4':0.0749,
-                     'A5':0.0819,
-                     'B1':0.0867,
-                     'B2':0.0949,
-                     'B3':0.1049,
-                     'B4':0.1144,
-                     'B5':0.1199,
-                     'C1':0.1239,
-                     'C2':0.1299,
-                     'C3':0.1366,
-                     'C4':0.1431,
-                     'C5':0.1499,
-                     'D1':0.1559,
-                     'D2':0.1599,
-                     'D3':0.1649,
-                     'D4':0.1714,
-                     'D5':0.1786}
+    # Category 'home_own_any' not in features, added for consistency
+    df['home_own_any'] = 0
 
+
+    # Replace int_rate with values set in Dec 2015 by sub_grade
+    int_rate_dict = {'A1':0.0603, 'A2':0.0649, 'A3':0.0699, 'A4':0.0749, 'A5':0.0819,
+                     'B1':0.0867, 'B2':0.0949, 'B3':0.1049, 'B4':0.1144, 'B5':0.1199,
+                     'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
+                     'D1':0.1559, 'D2':0.1599, 'D3':0.1649, 'D4':0.1714, 'D5':0.1786}
     
-    print "Generating cashflows..."
-    actual_cashflows = matured_IRR(df, 36, False, int_rate_dict)
 
+    # Calculating actual IRR for loans already matured with updated int_rate
     print "Calculating IRR..."
-    dump_to_pickle(IRR, '../pickle/IRR_matured_actual.pkl')
+
+    IRR = actual_IRR(df, False, int_rate_dict)
+
+    print IRR[:2]
+    # dump_to_pickle(IRR, '../pickle/IRR_matured_actual.pkl')
 
 
 if __name__ == '__main__':
-    # main_basic()
-    main_recent()
+    main_actual()
+    # main_recent()

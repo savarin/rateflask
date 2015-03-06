@@ -65,4 +65,4 @@ def calc_IRR(cashflows):
     '''
     Calculates 3-year IRR from generated cashflows.
     '''
-    return [(np.sum(cashflow)**(1./3) - 1 for cashflow in cashflows]
+    return [np.sum(cashflow)**(1./3) - 1 for cashflow in cashflows]

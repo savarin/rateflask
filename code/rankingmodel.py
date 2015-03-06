@@ -44,10 +44,9 @@ def main():
     df_raw = pd.concat((df_3c, df_3b), axis=0)
 
     df = process_features(df_raw)
-    df = df[df['term'] == 36]
 
-    dump_to_pickle(df, '../pickle/df.pkl')
-    df = load_from_pickle('../pickle/df.pkl')
+    # dump_to_pickle(df, '../pickl/df.pkl')
+    # df = load_from_pickle('../pickle/df.pkl')
 
 
     # Define scope, then convert data to array
@@ -68,9 +67,7 @@ def main():
                 'home_own_any', 'home_own_mortgage', 'home_own_none', 
                 'home_own_other', 'home_own_own', 'home_own_rent']
 
-    X, y = convert_to_array(data=df, 
-                            date_range=date_range,
-                            features=features,
+    X, y = convert_to_array(df, date_range, features,
                             create_label=True,
                             label='sub_grade',
                             label_one='A1',
