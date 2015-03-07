@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from itertools import izip
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from preprocessing import dump_to_pickle, load_from_pickle, process_features, convert_to_array
@@ -9,9 +10,7 @@ from preprocessing import dump_to_pickle, load_from_pickle, process_features, co
 class RankingModel(object):
     def __init__(self,
                  model=RandomForestClassifier(),
-                 parameters={'n_estimators':100,
-                             'criterion':'entropy',
-                             'max_depth':10}):      
+                 parameters={'n_estimators':100, 'max_depth':10}):      
         '''
         model: choice of model
         parameters: parameter for model, dictionary
@@ -45,7 +44,13 @@ def main():
 
     df = process_features(df_raw)
 
-    # dump_to_pickle(df, '../pickl/df.pkl')
+    fill_values = -999
+
+    df['mths_since_last_delinq'] = df['mths_since_last_delinq'].fillna(fill_values) 
+    df['mths_since_last_record'] = df['mths_since_last_record'].fillna(fill_values)
+    df['mths_since_last_major_derog'] = df['mths_since_last_major_derog'].fillna(fill_values)
+
+    # dump_to_pickle(df, '../pickle/df.pkl')
     # df = load_from_pickle('../pickle/df.pkl')
 
 
@@ -61,22 +66,19 @@ def main():
                 'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
                 'revol_bal', 'revol_util', 'inq_last_6mths', 
                 'delinq_2yrs', 'pub_rec', 'collect_12mths', 
-                'purpose_biz', 'purpose_buy', 'purpose_credit', 
-                'purpose_debt', 'purpose_energy', 'purpose_home', 
-                'purpose_medic', 'purpose_vac', 'purpose_wed', 
-                'home_own_any', 'home_own_mortgage', 'home_own_none', 
-                'home_own_other', 'home_own_own', 'home_own_rent']
+                'last_delinq', 'last_record', 'last_derog',
+                'purpose_debt', 'purpose_credit', 'purpose_home', 
+                'purpose_other', 'purpose_buy', 'purpose_biz', 
+                'purpose_medic', 'purpose_car', 'purpose_move', 
+                'purpose_vac', 'purpose_house', 'purpose_wed', 'purpose_energy', 
+                'home_own_mortgage', 'home_own_rent', 'home_own_own',
+                'home_own_other', 'home_own_none', 'home_own_any']
 
     X, y = convert_to_array(df, date_range, features,
                             create_label=True,
                             label='sub_grade',
                             label_one='A1',
                             label_zero='D5')
-
-    # dump_to_pickle(X, '../pickle/X.pkl')
-    # dump_to_pickle(y, '../pickle/y.pkl')
-    # X = load_from_pickle('../pickle/X.pkl')
-    # y = load_from_pickle('../pickle/y.pkl')
 
 
     # Test model accuracy
@@ -85,8 +87,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
     model = RankingModel(model=RandomForestClassifier,
-                         parameters={'n_estimators':100,
-                                     'max_depth':10})
+                         parameters={'n_estimators':100, 'max_depth':10})
 
     model.fit(X_train, y_train)
     
@@ -95,7 +96,11 @@ def main():
     y_predict = model.predict(X_test)
     print np.sum(y_predict == y_test) / float(len(y_test))
 
-    print model.model.feature_importances_
+    print len(features)
+    print len(model.model.feature_importances_)
+
+    for item in sorted(izip(model.model.feature_importances_, features)):
+        print item
 
 
 if __name__ == '__main__':

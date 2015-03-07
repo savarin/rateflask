@@ -26,6 +26,7 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
     earliest_cr_line - converted to length of time b/w first credit line and 
         date of loan issuance, issuance date of loan if n/a
     revol_util - missing values filled in by average
+    mths_since_last - missing values filled with -1
     '''
     grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
     term_mask = df_raw['term'].str.contains('36', na=False)
@@ -50,6 +51,7 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
                  'fico_range_low', 'fico_range_high', 'earliest_cr_line',
                  'open_acc', 'total_acc', 'revol_bal', 'revol_util', 'inq_last_6mths', 
                  'delinq_2yrs', 'pub_rec', 'collections_12_mths_ex_med',
+                 'mths_since_last_delinq', 'mths_since_last_record', 'mths_since_last_major_derog',
                  'purpose', 'home_ownership']]
 
     df['loan_status'] = df['loan_status'].map({'Fully Paid': 1., 'Current': 1., 
@@ -91,19 +93,33 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
 
     df.rename(columns={'collections_12_mths_ex_med': 'collect_12mths'}, inplace=True)
 
-    df['purpose'] = df['purpose'].map({'credit_card':'credit', 'debt_consolidation':'debt', 
-                                       'home_improvement':'home', 'major_purchase':'buy', 
-                                       'medical':'medic', 'renewable_energy':'energy', 
-                                       'small_business':'biz', 'vacation':'vac', 
-                                       'wedding':'wed'})
+    df['last_delinq'] = df['mths_since_last_delinq'].fillna(-1)
+    df['last_record'] = df['mths_since_last_record'].fillna(-1)
+    df['last_derog'] = df['mths_since_last_major_derog'].fillna(-1)
 
-    df = pd.concat([df, pd.get_dummies(df['purpose'], prefix='purpose')], axis=1)
+    df['purpose_debt'] = df['purpose'].map(lambda x: x == 'debt_consolidation').astype(int)
+    df['purpose_credit'] = df['purpose'].map(lambda x: x == 'credit_card').astype(int)
+    df['purpose_home'] = df['purpose'].map(lambda x: x == 'home_improvement').astype(int)
+    df['purpose_other'] = df['purpose'].map(lambda x: x == 'other').astype(int)
+    df['purpose_buy'] = df['purpose'].map(lambda x: x == 'major_purchase').astype(int)
+    df['purpose_biz'] = df['purpose'].map(lambda x: x == 'small_business').astype(int)
+    df['purpose_medic'] = df['purpose'].map(lambda x: x == 'medical').astype(int)
+    df['purpose_car'] = df['purpose'].map(lambda x: x == 'car').astype(int)
+    df['purpose_move'] = df['purpose'].map(lambda x: x == 'moving').astype(int)
+    df['purpose_vac'] = df['purpose'].map(lambda x: x == 'vacation').astype(int)
+    df['purpose_house'] = df['purpose'].map(lambda x: x == 'house').astype(int)
+    df['purpose_wed'] = df['purpose'].map(lambda x: x == 'wedding').astype(int)
+    df['purpose_energy'] = df['purpose'].map(lambda x: x == 'renewable_energy').astype(int)
 
-    df['home_ownership'] = df['home_ownership'].map(lambda x: x.lower())
-    df.rename(columns={'home_ownership': 'home_own'}, inplace=True)
-    df = pd.concat([df, pd.get_dummies(df['home_own'], prefix='home_own')], axis=1)
+    df['home_mortgage'] = df['home_ownership'].map(lambda x: x == 'MORTGAGE').astype(int)
+    df['home_rent'] = df['home_ownership'].map(lambda x: x == 'RENT').astype(int)
+    df['home_own'] = df['home_ownership'].map(lambda x: x == 'OWN').astype(int)
+    df['home_other'] = df['home_ownership'].map(lambda x: x == 'OTHER').astype(int)
+    df['home_none'] = df['home_ownership'].map(lambda x: x == 'NONE').astype(int)
+    df['home_any'] = df['home_ownership'].map(lambda x: x == 'ANY').astype(int)
 
-    df = df.drop((['fico_range_high', 'purpose', 'home_own']), axis=1)
+    df = df.drop((['fico_range_high', 'mths_since_last_delinq', 'mths_since_last_record', 
+                   'mths_since_last_major_derog', 'purpose', 'home_ownership']), axis=1)
 
     return df
 

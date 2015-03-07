@@ -40,29 +40,29 @@ def index():
 
 @app.route('/expected_return')
 def expected_return():
-    # loan_results, loan_details = request_loan_data(filter_search)
+    loan_results, loan_details = request_loan_data(filter_search)
 
-    # df_raw = process_requests(loan_results, loan_details)
-    # df = process_features(df_raw, False)
+    df_raw = process_requests(loan_results, loan_details)
+    df = process_features(df_raw, False)
 
-    # df['purpose_energy'] = 0
-    # df['purpose_wed'] = 0
-    # df['home_own_any'] = 0
-    # df['home_own_none'] = 0
-    # df['home_own_other'] = 0
+    df['purpose_energy'] = 0
+    df['purpose_wed'] = 0
+    df['home_own_any'] = 0
+    df['home_own_none'] = 0
+    df['home_own_other'] = 0
 
-    # model = load_from_pickle('../pickle/predictionmodel.pkl')
-    # IRR = model.expected_IRR(df, features, True)
+    model = load_from_pickle('../pickle/predictionmodel.pkl')
+    IRR = model.expected_IRR(df, features, True)
 
     # dump_to_pickle(IRR, '../pickle/IRR_test')
-    IRR = load_from_pickle('../pickle/IRR_test')
+    # IRR = load_from_pickle('../pickle/IRR_test')
 
     chart_type = 'discreteBarChart'
     chart = discreteBarChart(name=chart_type, color_category='category20c', height=772, width=1250)
     
     xdata = range(len(IRR))[:20]
     ydata = IRR[:20]
-    extra_serie = {"tooltip": {"y_start": "", "y_end": " cal"}}
+    extra_serie = {"tooltip": {"y_start": "", "y_end": ""}}
     chart.add_serie(y=ydata, x=xdata, extra=extra_serie)
     chart.buildcontent()
     body = chart.htmlcontent

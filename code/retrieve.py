@@ -4,7 +4,7 @@ import pandas as pd
 from lendingclub import LendingClub
 from lendingclub.filters import Filter
 from pymongo import MongoClient, Connection
-from preprocessing import dump_to_pickle, load_from_pickle, process_requests, process_features
+from preprocessing import dump_to_pickle, load_from_pickle, process_features
 from datetime import datetime
 import psycopg2
 import time
@@ -118,12 +118,12 @@ def main():
                                 'G': False},
                      'term': {'Year3': True, 'Year5': False}}
 
-    # loan_results, loan_details = request_loan_data(filter_search)
+    loan_results, loan_details = request_loan_data(filter_search)
 
     # dump_to_pickle(loan_results, '../pickle/loan_search_20150306_1111.pkl')
     # dump_to_pickle(loan_details, '../pickle/loan_get_20150306_1111.pkl')
-    loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
-    loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
+    # loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
+    # loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
 
     df_raw = process_requests(loan_results, loan_details)
     print df_raw.shape

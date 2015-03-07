@@ -21,20 +21,47 @@ class StatusModels(object):
         self.model = model
         self.parameters = parameters
         self.model_dict = defaultdict(list)
+        self.term = 3
+        self.grade_range = ['A', 'B', 'C', 'D']
+
+        self.date_range = ['Dec-2014', 'Nov-2014', 'Oct-2014',
+                           'Sep-2014', 'Aug-2014', 'Jul-2014', 
+                           'Jun-2014', 'May-2014', 'Apr-2014', 
+                           'Mar-2014', 'Feb-2014', 'Jan-2014',
+                           'Dec-2013', 'Nov-2013', 'Oct-2013', 
+                           'Sep-2013', 'Aug-2013', 'Jul-2013', 
+                           'Jun-2013', 'May-2013', 'Apr-2013', 
+                           'Mar-2013', 'Feb-2013', 'Jan-2013',                            'Dec-2012', 'Nov-2012', 'Oct-2012', 
+                           'Sep-2012', 'Aug-2012', 'Jul-2012', 
+                           'Jun-2012', 'May-2012', 'Apr-2012', 
+                           'Mar-2012', 'Feb-2012', 'Jan-2012']
+
+        self.features = ['loan_amnt', 'emp_length', 'monthly_inc', 'dti', 
+                         'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
+                         'revol_bal', 'revol_util', 'inq_last_6mths', 
+                         'delinq_2yrs', 'pub_rec', 'collect_12mths', 
+                         'last_delinq', 'last_record', 'last_derog',
+                         'purpose_debt', 'purpose_credit', 'purpose_home', 
+                         'purpose_other', 'purpose_buy', 'purpose_biz', 
+                         'purpose_medic', 'purpose_car', 'purpose_move', 
+                         'purpose_vac', 'purpose_house', 'purpose_wed', 'purpose_energy', 
+                         'home_own_mortgage', 'home_own_rent', 'home_own_own',
+                         'home_own_other', 'home_own_none', 'home_own_any']
 
 
-    def train_status_models(self, df, grade_range, date_range, features):
+    def train_status_models(self, df):
         '''
         Trains model for every grade for whole date_range
         '''
         grade_dict = defaultdict(list)        
         
-        for grade in grade_range:
-            for month in date_range:
+        for grade in self.grade_range:
+            for month in self.date_range:
+                print grade, month
                 df_select = df[(df['grade'].isin([grade])) 
                              & (df['issue_d'].isin([month]))]
                 
-                X = df_select[features].values
+                X = df_select[self.features].values
                 y = df_select['loan_status'].values
 
                 model = self.model(**self.parameters)
@@ -97,14 +124,12 @@ class StatusModels(object):
         return get_cashflows(expected_payout, X_int_rate, date_range_length)
 
 
-    def expected_IRR(self, df, features, actual_rate=True, rate_dict={}):
+    def expected_IRR(self, df, actual_rate=True, rate_dict={}):
         '''
         Calculates IRR for loans that have not yet matured.
         '''
-        term = 3
-        date_range_length = term * 12
-
-        X = df[features].values
+        X = df[self.features].values
+        date_range_length = self.term * 12
 
         if actual_rate:
             X_int_rate = df['int_rate'].values
@@ -117,7 +142,35 @@ class StatusModels(object):
                                                           X_sub_grade,
                                                           date_range_length)
 
-        return calc_IRR(expected_cashflows, term)
+        return calc_IRR(expected_cashflows, self.term)
+
+
+def main_test():
+    # Load data, then pre-process
+    print "Loading data..."
+
+    df_3c = pd.read_csv('../data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+    df_3b = pd.read_csv('../data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    df_raw = pd.concat((df_3c, df_3b), axis=0)
+    
+    df = process_features(df_raw)
+
+
+    # Train models for every grade for every month
+    print "Training models..."
+
+    model = StatusModels(model=RandomForestRegressor,
+                         parameters={'n_estimators':100,
+                                     'max_depth':10})
+
+    model.train_status_models(df)
+    
+
+    # Testing IRR calculations
+    print "Calculating IRR..."
+
+    IRR = model.expected_IRR(df.iloc[:10, :], True)
+    print IRR
 
 
 def main_fit():
@@ -137,31 +190,6 @@ def main_fit():
     # Define scope
     print "Setting scope..."
 
-    grade_range = ['A', 'B', 'C', 'D']
-
-    date_range = ['Dec-2014', 'Nov-2014', 'Oct-2014',
-                  'Sep-2014', 'Aug-2014', 'Jul-2014', 
-                  'Jun-2014', 'May-2014', 'Apr-2014', 
-                  'Mar-2014', 'Feb-2014', 'Jan-2014',
-                  'Dec-2013', 'Nov-2013', 'Oct-2013', 
-                  'Sep-2013', 'Aug-2013', 'Jul-2013', 
-                  'Jun-2013', 'May-2013', 'Apr-2013', 
-                  'Mar-2013', 'Feb-2013', 'Jan-2013',
-                  'Dec-2012', 'Nov-2012', 'Oct-2012', 
-                  'Sep-2012', 'Aug-2012', 'Jul-2012', 
-                  'Jun-2012', 'May-2012', 'Apr-2012', 
-                  'Mar-2012', 'Feb-2012', 'Jan-2012']
-
-    features = ['loan_amnt', 'emp_length', 'monthly_inc', 'dti',
-                'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
-                'revol_bal', 'revol_util', 'inq_last_6mths', 
-                'delinq_2yrs', 'pub_rec', 'collect_12mths', 
-                'purpose_biz', 'purpose_buy', 'purpose_credit', 
-                'purpose_debt', 'purpose_energy', 'purpose_home', 
-                'purpose_medic', 'purpose_vac', 'purpose_wed', 
-                'home_own_any', 'home_own_mortgage', 'home_own_none', 
-                'home_own_other', 'home_own_own', 'home_own_rent']
-
     int_rate_dict = {'A1':0.0603, 'A2':0.0649, 'A3':0.0699, 'A4':0.0749, 'A5':0.0819,
                      'B1':0.0867, 'B2':0.0949, 'B3':0.1049, 'B4':0.1144, 'B5':0.1199,
                      'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
@@ -174,17 +202,17 @@ def main_fit():
                          parameters={'n_estimators':100,
                                      'max_depth':10})
 
-    # model.train_status_models(df, grade_range, date_range, features)
+    # model.train_status_models(df)
     
     # dump_to_pickle(model, '../pickle/predictionmodel.pkl')
-    model = load_from_pickle('../pickle/predictionmodel.pkl')
+    # model = load_from_pickle('../pickle/predictionmodel.pkl')
 
 
     # Testing IRR calculations
     print "Calculating IRR..."
-    # IRR = model.expected_IRR(df, features, True)
+    # IRR = model.expected_IRR(df, True)
 
-    IRR = model.expected_IRR(df, features, False, int_rate_dict)
+    IRR = model.expected_IRR(df, False, int_rate_dict)
     
     print IRR
     dump_to_pickle(IRR, '../pickle/IRR_current_currentrate.pkl')
@@ -205,16 +233,6 @@ def main_predict():
     # Define scope
     print "Setting scope..."
 
-    features = ['loan_amnt', 'emp_length', 'monthly_inc', 'dti',
-                'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
-                'revol_bal', 'revol_util', 'inq_last_6mths', 
-                'delinq_2yrs', 'pub_rec', 'collect_12mths', 
-                'purpose_biz', 'purpose_buy', 'purpose_credit', 
-                'purpose_debt', 'purpose_energy', 'purpose_home', 
-                'purpose_medic', 'purpose_vac', 'purpose_wed', 
-                'home_own_any', 'home_own_mortgage', 'home_own_none', 
-                'home_own_other', 'home_own_own', 'home_own_rent']
-
     int_rate_dict = {'A1':0.0603, 'A2':0.0649, 'A3':0.0699, 'A4':0.0749, 'A5':0.0819,
                      'B1':0.0867, 'B2':0.0949, 'B3':0.1049, 'B4':0.1144, 'B5':0.1199,
                      'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
@@ -222,19 +240,17 @@ def main_predict():
 
     model = load_from_pickle('../pickle/predictionmodel.pkl')
 
-    # Category 'home_own_any' not in features, added for consistency
-    df['home_own_any'] = 0
-    df['home_own_none'] = 0
 
     # Calculating expected IRR for loans already matured
     print "Calculating IRR..."
 
-    IRR = model.expected_IRR(df, features, False, int_rate_dict)
+    IRR = model.expected_IRR(df, False, int_rate_dict)
     
     print IRR
     # dump_to_pickle(IRR, '../pickle/IRR_matured_predicted.pkl')
 
 
 if __name__ == '__main__':
-    main_fit()
+    main_test()
+    # main_fit()
     # main_predict()

@@ -88,9 +88,6 @@ def main_recent():
     
     df = process_payment(df_raw)
 
-    # Category 'home_own_any' not in features, added for consistency
-    df['home_own_any'] = 0
-
 
     # Replace int_rate with values set in Dec 2015 by sub_grade
     int_rate_dict = {'A1':0.0603, 'A2':0.0649, 'A3':0.0699, 'A4':0.0749, 'A5':0.0819,
