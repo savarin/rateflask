@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from scipy.optimize import curve_fit
 import pickle
 from preprocessing import dump_to_pickle, load_from_pickle, process_features
-from cashflow import calc_monthly_payments, get_monthly_payments, \
+from cashflow import calc_monthly_payment, get_monthly_payments, \
                      get_compound_curve, get_cashflows, calc_IRR
 
 
@@ -45,8 +45,8 @@ class StatusModels(object):
                          'purpose_other', 'purpose_buy', 'purpose_biz', 
                          'purpose_medic', 'purpose_car', 'purpose_move', 
                          'purpose_vac', 'purpose_house', 'purpose_wed', 'purpose_energy', 
-                         'home_own_mortgage', 'home_own_rent', 'home_own_own',
-                         'home_own_other', 'home_own_none', 'home_own_any']
+                         'home_mortgage', 'home_rent', 'home_own',
+                         'home_other', 'home_none', 'home_any']
 
 
     def train_status_models(self, df):
@@ -57,7 +57,6 @@ class StatusModels(object):
         
         for grade in self.grade_range:
             for month in self.date_range:
-                print grade, month
                 df_select = df[(df['grade'].isin([grade])) 
                              & (df['issue_d'].isin([month]))]
                 
@@ -114,19 +113,33 @@ class StatusModels(object):
         return np.array(expected_payout)
 
 
-    def get_expected_cashflows(self, X, X_int_rate, X_sub_grade, date_range_length):
+    def get_expected_cashflows(self, X, X_int_rate, X_compound_rate, 
+                                     X_sub_grade, date_range_length):
         '''
         Generates expected cashflow for each loan, i.e. monthly payments 
         multiplied by probability of receiving that payment and compounded to
         the maturity of the loan
         '''
         expected_payout = self.get_expected_payout(X, X_sub_grade)
-        return get_cashflows(expected_payout, X_int_rate, date_range_length)
+        return get_cashflows(expected_payout, X_int_rate, X_compound_rate, 
+                             date_range_length)
 
 
-    def expected_IRR(self, df, actual_rate=True, rate_dict={}):
+    def expected_IRR(self, df, 
+                           actual_rate=True, 
+                           rate_dict={},
+                           actual_as_compound=True,
+                           compound_rate=0.01):
         '''
         Calculates IRR for loans that have not yet matured.
+
+        actual_rate: If using interest rates in data or custom, Boolean
+        rate_dict: Custom dictionary with sub-grade as keys as interest rate as
+        values, dictionary
+
+        actual_as_compound: If using interest rates in data as compound rate or 
+        custom, Boolean
+        compound_rate: Custom interest rate for compounding, float
         '''
         X = df[self.features].values
         date_range_length = self.term * 12
@@ -136,11 +149,18 @@ class StatusModels(object):
         else:
             X_int_rate = df['sub_grade'].map(rate_dict).values
 
+        if actual_as_compound:
+            X_compound_rate = X_int_rate
+        else:
+            X_compound_rate = np.array([compound_rate] * X_int_rate.shape[0])
+
         X_sub_grade = df['sub_grade'].values
 
-        expected_cashflows = self.get_expected_cashflows(X, X_int_rate, 
-                                                          X_sub_grade,
-                                                          date_range_length)
+        expected_cashflows = self.get_expected_cashflows(X, 
+                                                         X_int_rate,
+                                                         X_compound_rate, 
+                                                         X_sub_grade,
+                                                         date_range_length)
 
         return calc_IRR(expected_cashflows, self.term)
 
@@ -155,6 +175,9 @@ def main_test():
     
     df = process_features(df_raw)
 
+    # dump_to_pickle(df, '../pickle/df_test.pkl')
+    # df = load_from_pickle('../pickle/df_test.pkl')
+
 
     # Train models for every grade for every month
     print "Training models..."
@@ -165,11 +188,14 @@ def main_test():
 
     model.train_status_models(df)
     
+    dump_to_pickle(model, '../pickle/model_test.pkl')
+    model = load_from_pickle('../pickle/model_test.pkl')
+
 
     # Testing IRR calculations
     print "Calculating IRR..."
 
-    IRR = model.expected_IRR(df.iloc[:10, :], True)
+    IRR = model.expected_IRR(df.iloc[:10, :], True, {}, False)
     print IRR
 
 
@@ -195,6 +221,7 @@ def main_fit():
                      'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
                      'D1':0.1559, 'D2':0.1599, 'D3':0.1649, 'D4':0.1714, 'D5':0.1786}
 
+
     # Train models for every grade for every month
     print "Training models..."
 
@@ -202,20 +229,19 @@ def main_fit():
                          parameters={'n_estimators':100,
                                      'max_depth':10})
 
-    # model.train_status_models(df)
+    model.train_status_models(df)
     
-    # dump_to_pickle(model, '../pickle/predictionmodel.pkl')
+    dump_to_pickle(model, '../pickle/predictionmodel_20150306.pkl')
     # model = load_from_pickle('../pickle/predictionmodel.pkl')
 
 
     # Testing IRR calculations
     print "Calculating IRR..."
+    
     # IRR = model.expected_IRR(df, True)
-
     IRR = model.expected_IRR(df, False, int_rate_dict)
     
-    print IRR
-    dump_to_pickle(IRR, '../pickle/IRR_current_currentrate.pkl')
+    dump_to_pickle(IRR, '../pickle/IRR_current_201412rate_20150307.pkl')
 
 
 def main_predict():
@@ -227,8 +253,6 @@ def main_predict():
     
     df = process_features(df_raw, True, False)
 
-    # dump_to_pickle(df, '../pickle/df.pkl')
-    # df = load_from_pickle('../pickle/df.pkl').iloc[:2, :]
 
     # Define scope
     print "Setting scope..."
@@ -238,7 +262,7 @@ def main_predict():
                      'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
                      'D1':0.1559, 'D2':0.1599, 'D3':0.1649, 'D4':0.1714, 'D5':0.1786}
 
-    model = load_from_pickle('../pickle/predictionmodel.pkl')
+    model = load_from_pickle('../pickle/predictionmodel_20150306.pkl')
 
 
     # Calculating expected IRR for loans already matured
@@ -246,8 +270,7 @@ def main_predict():
 
     IRR = model.expected_IRR(df, False, int_rate_dict)
     
-    print IRR
-    # dump_to_pickle(IRR, '../pickle/IRR_matured_predicted.pkl')
+    dump_to_pickle(IRR, '../pickle/IRR_matured_201412rate_20150307.pkl')
 
 
 if __name__ == '__main__':
