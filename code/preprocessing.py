@@ -61,8 +61,6 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
                                                'Default': 0.08,
                                                'Charged Off': 0.})
 
-    # Rows with missing interest rates appear to be corrupted, only in 3a
-    df = df[pd.notnull(df['int_rate'])]
     df['int_rate'] = df['int_rate'].map(lambda x: float(str(x).strip('%')) / 100)
 
     df['term'] = df['term'].map(lambda x: int(str(x).strip(' months')))

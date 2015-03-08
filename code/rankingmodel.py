@@ -71,8 +71,8 @@ def main():
                 'purpose_other', 'purpose_buy', 'purpose_biz', 
                 'purpose_medic', 'purpose_car', 'purpose_move', 
                 'purpose_vac', 'purpose_house', 'purpose_wed', 'purpose_energy', 
-                'home_own_mortgage', 'home_own_rent', 'home_own_own',
-                'home_own_other', 'home_own_none', 'home_own_any']
+                'home_mortgage', 'home_rent', 'home_own',
+                'home_other', 'home_none', 'home_any']
 
     X, y = convert_to_array(df, date_range, features,
                             create_label=True,
