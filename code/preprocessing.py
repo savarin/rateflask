@@ -92,8 +92,11 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
     df.rename(columns={'collections_12_mths_ex_med': 'collect_12mths'}, inplace=True)
 
     df['last_delinq'] = df['mths_since_last_delinq'].fillna(-1)
+    df['last_delinq'] = df['last_delinq'].map(lambda x: -1 if x == 'n/a' else x)
     df['last_record'] = df['mths_since_last_record'].fillna(-1)
+    df['last_record'] = df['last_record'].map(lambda x: -1 if x == 'n/a' else x)
     df['last_derog'] = df['mths_since_last_major_derog'].fillna(-1)
+    df['last_derog'] = df['last_derog'].map(lambda x: -1 if x == 'n/a' else x)
 
     df['purpose_debt'] = df['purpose'].map(lambda x: x == 'debt_consolidation').astype(int)
     df['purpose_credit'] = df['purpose'].map(lambda x: x == 'credit_card').astype(int)

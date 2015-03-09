@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-from retrieve import request_loan_data, process_requests
+from retrieve import request_loan_data, process_requests, results_to_database
 from preprocessing import dump_to_pickle, load_from_pickle, process_features
 from currentmodel import StatusModels
-from flask import Flask
-from nvd3 import discreteBarChart
+from flask import Flask, render_template
+
 app = Flask(__name__)
 
 filter_search = {'exclude_existing': False,
@@ -19,79 +19,29 @@ filter_search = {'exclude_existing': False,
                             'G': False},
                  'term': {'Year3': True, 'Year5': False}}
 
-features = ['loan_amnt', 'emp_length', 'monthly_inc', 'dti', 
-            'fico', 'earliest_cr_line', 'open_acc', 'total_acc', 
-            'revol_bal', 'revol_util', 'inq_last_6mths', 
-            'delinq_2yrs', 'pub_rec', 'collect_12mths', 
-            'last_delinq', 'last_record', 'last_derog',
-            'purpose_debt', 'purpose_credit', 'purpose_home', 
-            'purpose_other', 'purpose_buy', 'purpose_biz', 
-            'purpose_medic', 'purpose_car', 'purpose_move', 
-            'purpose_vac', 'purpose_house', 'purpose_wed', 'purpose_energy', 
-            'home_mortgage', 'home_rent', 'home_own',
-            'home_other', 'home_none', 'home_any']
-
 
 @app.route('/')
-def index():
-    return '<h1> Hello World! </h1>'
-
-
-@app.route('/expected_return')
 def expected_return():
-    # loan_results, loan_details = request_loan_data(filter_search)
+    # loan_results, loan_details = request_loan_data(filter_search, lending_test)
     # loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
     # loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
 
     # df_raw = process_requests(loan_results, loan_details)
     # df = process_features(df_raw, False)
 
-    # model = load_from_pickle('../pickle/predictionmodel.pkl')
-    # IRR = model.expected_IRR(df, features, True)
+    # model = load_from_pickle('../pickle/StatusModels_20150309.pkl')
+    # IRR = model.expected_IRR(df, True)
 
-    # dump_to_pickle(IRR, '../pickle/IRR_test')
-    IRR = load_from_pickle('../pickle/IRR_test')
+    # df_results = df['id', 'sub_grade']
+    # df_results['IRR'] = IRR
+    # df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    # results = df_results.values
 
-    chart_type = 'discreteBarChart'
-    chart = discreteBarChart(name=chart_type, color_category='category20c', height=772, width=1250)
-    
-    xdata = range(len(IRR))[:20]
-    ydata = IRR[:20]
-    extra_serie = {"tooltip": {"y_start": "", "y_end": ""}}
-    chart.add_serie(y=ydata, x=xdata, extra=extra_serie)
-    chart.buildcontent()
-    body = chart.htmlcontent
+    # database_name = 'testinput'
+    # table_name = 'results'
+    # results_to_database(database_name, table_name, results)
 
-    doctype = '''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="static/d3.js"></script>
-            <script src="static/nv.d3.js"></script>
-            <link href="static/nv.d3.css" rel="stylesheet" type="text/css">
-
-            <style>
-                text {
-                    font: 12px sans-serif;
-                }
-                svg {
-                    display: block;
-                }
-                html, body, #chart1, svg {
-                    margin: 0px;
-                    padding: 0px;
-                    height: 100%;
-                    width: 100%;
-                }
-            </style>
-        </head>
-        <body>
-
-    '''
-
-    return doctype + body
-
+    return render_template('chart_app.html')
 
 
 if __name__ == '__main__':

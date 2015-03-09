@@ -30,7 +30,7 @@ def fit_current():
 
     model.train_status_models(df)
     
-    dump_to_pickle(model, '../pickle/StatusModels_20150308.pkl')
+    dump_to_pickle(model, '../pickle/StatusModels_20150309.pkl')
 
 
     # Testing IRR calculations
@@ -41,8 +41,10 @@ def fit_current():
                      'C1':0.1239, 'C2':0.1299, 'C3':0.1366, 'C4':0.1431, 'C5':0.1499,
                      'D1':0.1559, 'D2':0.1599, 'D3':0.1649, 'D4':0.1714, 'D5':0.1786}
 
-    IRR = model.expected_IRR(df.iloc[:10, :], False, int_rate_dict)
-    print IRR
+    IRR = model.expected_IRR(df, False, int_rate_dict)
+
+    dump_to_pickle(IRR, '../pickle/IRR_expected_current_201412rate_20150309')
+    print IRR[:10]
 
 
 if __name__ == '__main__':

@@ -121,19 +121,19 @@ def results_to_database(database_name, table_name, results):
         '''
         CREATE TABLE IF NOT EXISTS {}
             (
-                id VARCHAR (50) PRIMARY KEY,
+                id VARCHAR (50),
                 name VARCHAR (50),
                 number VARCHAR (50)
-            )
+            );
         '''.format(table_name)
     )
 
     for result in results:
         c.execute(
             ''' 
-            INSERT INTO trends
+            INSERT INTO {}
             VALUES ({}, {}, {});
-            '''.format(*result)
+            '''.format(table_name, *result)
 
         )
 
