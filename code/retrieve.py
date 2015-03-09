@@ -14,7 +14,7 @@ import re
 def request_loan_data(filter_dict):
     '''
     Requests list of loans that can be invested in, then makes individual call
-    for details of the loans
+    for details of the loans. Results stored in MongoDB database.
     '''
     # print "Initializing MongoDB database..."
     # client = MongoClient()
@@ -60,7 +60,9 @@ def process_requests(loan_results, loan_details):
                 [['completeTenure', 'grossIncome', 'DTI', 
                   'earliestCreditLine', 'openCreditLines', 'totalCreditLines', 
                   'revolvingCreditBalance', 'revolvingLineUtilization', 
-                  'inquiriesLast6Months', 'lateLast2yrs', 'publicRecordsOnFile', 
+                  'inquiriesLast6Months', 'lateLast2yrs', 'publicRecordsOnFile',
+                  'monthsSinceLastDelinquency', 'monthsSinceLastRecord',
+                  'monthsSinceLastMajorDerogatory',
                   'collectionsExcludingMedical', 'homeOwnership']]
 
     df_raw = pd.concat((df_search, df_get), axis=1)
@@ -89,8 +91,11 @@ def process_requests(loan_results, loan_details):
              'loanAmountRequested', 'loanLength', 
              'completeTenure', 'grossIncome', 'DTI',
              'fico', 'fico_range_high', 'earliestCreditLine',
-             'openCreditLines', 'totalCreditLines', 'revolvingCreditBalance', 'revolvingLineUtilization', 'inquiriesLast6Months',
+             'openCreditLines', 'totalCreditLines', 'revolvingCreditBalance', 
+             'revolvingLineUtilization', 'inquiriesLast6Months',
              'lateLast2yrs', 'publicRecordsOnFile', 'collectionsExcludingMedical',
+             'monthsSinceLastDelinquency', 'monthsSinceLastRecord',
+             'monthsSinceLastMajorDerogatory',
              'purpose', 'homeOwnership']]
 
     df_raw.columns = ['id', 'grade', 'sub_grade', 'issue_d', 'loan_status', 'int_rate',
@@ -99,10 +104,41 @@ def process_requests(loan_results, loan_details):
                   'fico_range_low', 'fico_range_high', 'earliest_cr_line',
                   'open_acc', 'total_acc', 'revol_bal', 'revol_util', 'inq_last_6mths', 
                   'delinq_2yrs', 'pub_rec', 'collections_12_mths_ex_med',
+                  'mths_since_last_delinq', 'mths_since_last_record', 'mths_since_last_major_derog',
                   'purpose', 'home_ownership']
 
     return df_raw
 
+
+def results_to_database(database_name, table_name, results):
+    '''
+    Insert loan features and expected IRR into PostgresQL database.
+    '''
+    conn = psycopg2.connect(dbname=database_name, user='postgres', host='/tmp')
+    c = conn.cursor()
+
+    c.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS {}
+            (
+                id VARCHAR (50) PRIMARY KEY,
+                name VARCHAR (50),
+                number VARCHAR (50)
+            )
+        '''.format(table_name)
+    )
+
+    for result in results:
+        c.execute(
+            ''' 
+            INSERT INTO trends
+            VALUES ({}, {}, {});
+            '''.format(*result)
+
+        )
+
+    conn.commit()
+    conn.close()
 
 
 def main():
@@ -130,27 +166,6 @@ def main():
 
     df = process_features(df_raw, False)
     print df.shape
-
-
-    # PROCESS DATA
-    # PROCESS DATA
-    # PROCESS DATA
-
-
-    # trends - simply list of length 10
-
-    # conn = psycopg2.connect(dbname='lend', user='postgres', host='/tmp')
-    # c = conn.cursor()
-
-    # c.execute(
-    #     ''' 
-    #     INSERT INTO trends
-    #     VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {}, {});
-    #     '''.format(*trends)
-    # )
-
-    # conn.commit()
-    # conn.close()
 
 
 if __name__ == '__main__':
