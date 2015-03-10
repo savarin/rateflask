@@ -23,23 +23,23 @@ filter_search = {'exclude_existing': False,
 @app.route('/')
 def expected_return():
     # loan_results, loan_details = request_loan_data(filter_search, lending_test)
-    # loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
-    # loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
+    loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
+    loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
 
-    # df_raw = process_requests(loan_results, loan_details)
-    # df = process_features(df_raw, False)
+    df_raw = process_requests(loan_results, loan_details)
+    df = process_features(df_raw, False)
 
-    # model = load_from_pickle('../pickle/StatusModels_20150309.pkl')
-    # IRR = model.expected_IRR(df, True)
+    model = load_from_pickle('../pickle/StatusModels_20150309.pkl')
+    IRR = model.expected_IRR(df, True)
 
-    # df_results = df['id', 'sub_grade']
-    # df_results['IRR'] = IRR
-    # df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
-    # results = df_results.values
+    df_results = df[['id', 'sub_grade']]
+    df_results['IRR'] = IRR
+    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    results = df_results.values
 
-    # database_name = 'testinput'
-    # table_name = 'results'
-    # results_to_database(database_name, table_name, results)
+    database_name = 'rateflasktest'
+    table_name = 'results'
+    results_to_database(database_name, table_name, results)
 
     return render_template('chart_app.html')
 

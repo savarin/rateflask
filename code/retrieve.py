@@ -16,11 +16,11 @@ def request_loan_data(filter_dict):
     Requests list of loans that can be invested in, then makes individual call
     for details of the loans. Results stored in MongoDB database.
     '''
-    # print "Initializing MongoDB database..."
-    # client = MongoClient()
-    # db = client.lending_test   
-    # collection_search = db.collection_search
-    # collection_get = db.collection_get
+    print "Initializing MongoDB database..."
+    client = MongoClient()
+    db = client.lending_test   
+    collection_search = db.collection_search
+    collection_get = db.collection_get
 
     print "Initializing APIs..."
     club = LendingClub()
@@ -39,9 +39,9 @@ def request_loan_data(filter_dict):
         loan_details.append(request.json())
         time.sleep(1)
 
-    # print "Inserting data to database"
-    # collection_search.insert(loan_results)
-    # collection_get.insert(loan_details)
+    print "Inserting data to database"
+    collection_search.insert(loan_results)
+    collection_get.insert(loan_details)
 
     return loan_results, loan_details
 

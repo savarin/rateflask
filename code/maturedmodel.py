@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from preprocessing import dump_to_pickle, load_from_pickle, process_payment
-from cashflow import calc_monthly_payment, get_monthly_payments, get_compound_curve, get_cashflows, calc_IRR
+from cashflow import get_cashflows, calc_IRR
 
 
 def get_actual_payout(X, date_range_length):

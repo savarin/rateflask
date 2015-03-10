@@ -31,7 +31,8 @@ class StatusModels(object):
                            'Dec-2013', 'Nov-2013', 'Oct-2013', 
                            'Sep-2013', 'Aug-2013', 'Jul-2013', 
                            'Jun-2013', 'May-2013', 'Apr-2013', 
-                           'Mar-2013', 'Feb-2013', 'Jan-2013',                            'Dec-2012', 'Nov-2012', 'Oct-2012', 
+                           'Mar-2013', 'Feb-2013', 'Jan-2013',
+                           'Dec-2012', 'Nov-2012', 'Oct-2012', 
                            'Sep-2012', 'Aug-2012', 'Jul-2012', 
                            'Jun-2012', 'May-2012', 'Apr-2012', 
                            'Mar-2012', 'Feb-2012', 'Jan-2012']
