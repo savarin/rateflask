@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=2.0">
+
+	<title>DataTables example - Zero configuration</title>
+	<link rel="stylesheet" type="text/css" href="../static/css/jquery.dataTables.css">
+	<link rel="stylesheet" type="text/css" href="../static/css/shCore.css">
+	<link rel="stylesheet" type="text/css" href="../static/css/demo.css">
+	
+	<style type="text/css" class="init">
+		body {
+			color: rgb(0,0,72);
+		}
+	</style>
+	<script type="text/javascript" src="../static/js/d3.js"></script>
+	<script type="text/javascript" language="javascript" src="../static/js/jquery.js"></script>
+	<script type="text/javascript" language="javascript" src="../static/js/jquery.dataTables.js"></script>
+	<script type="text/javascript" language="javascript" src="../static/js/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="../static/js/demo.js"></script>
+	<script type="text/javascript" language="javascript" class="init">
+
+
+
+$(document).ready(function() {
+	$('#example').DataTable( );
+} );
+
+
+	</script>
+</head>
+
+<body class="dt-example">
+
+	<div class="container">
+		<section>
+			<h1> <b> rateflask </b> </h1>
+			<div class="info">
+				<p>DataTables has most features enabled by default.</p>
+			</div>			
+		</section>
+	</div>
+
+<!-- 	<div class="container">
+		<section>
+			
+		<div id="chartline1">
+			<p> CHART SHOULD BE HERE </p>
+		</div>			
+		</section>
+	</div>
+ -->
+
+
+
+
+
+	<div class="container">
+		<section>
+			<h1>rateflask </h1>
+			<div class="info">
+				<p>DataTables has most features enabled by default.</p>
+			</div>
+			<table id="example" class="display" cellspacing="0" width="100%">
+				<thead>
+					<tr>
+						<th>Loan ID</th>
+						<th>Sub-grade</th>
+						<th>Term</th>
+                        <th>Amount</th>
+                        <th>% Funded</th>
+						<th>Interest rate</th>
+						<th>Expected IRR</th>
+                        <th>% Difference</th>
+					</tr>
+				</thead>
+
+				<tfoot>
+					<tr>
+                        <th>Loan ID</th>
+                        <th>Sub-grade</th>
+                        <th>Term</th>
+                        <th>Amount</th>
+                        <th>% Funded</th>
+                        <th>Interest rate</th>
+                        <th>Expected IRR</th>
+                        <th>% Difference</th>
+					</tr>
+				</tfoot>
+
+				<tbody>
+					
+                    {% for d in data %}
+                    <tr>
+                        <td> {{ d[0] }} </td>
+                        <td> {{ d[1] }} </td>
+                        <td> {{ d[2] }} </td>
+                        <td> {{ d[3] }} </td>
+                        <td> {{ d[4] }} </td>
+                        <td> {{ d[5] }} </td>
+                        <td> {{ d[6] }} </td>
+                        <td> {{ d[7] }} </td>
+                    </tr>   
+                    {% endfor %}
+
+				</tbody>
+			</table>
+			<br>
+		</section>
+	</div>
+
+	<script type="text/javascript">
+			var dataset = [1, 2, 3];  
+
+            var chart1 = d3.select("#chartline1")
+		                   .data(dataset)
+						   .enter()
+						   .append("rect")
+						   .attr("x", 0)
+						   .attr("y", 0)
+						   .attr("width", 20)
+						   .attr("height", 100);
+
+	</script>
+</body>
+</html>

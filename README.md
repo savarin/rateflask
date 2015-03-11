@@ -21,6 +21,8 @@ maturedmodel.py
 - Calculates actual IRR based on payments made, i.e. feature independent
 - Actual IRR used to validate currentmodel.py
 
+rankingmodel.py
+- Initial idea of ranking loans within sub-loan grade band, simple workable model
 
 **API-related:**
 
