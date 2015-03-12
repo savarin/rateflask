@@ -3,12 +3,12 @@ import pandas as pd
 from collections import defaultdict
 from sklearn.ensemble import RandomForestRegressor
 from scipy.optimize import curve_fit
-from fileio import dump_to_pickle, load_from_pickle
-from preprocessing import process_features
-from cashflow import get_cashflows, calc_IRR
+from transfers.fileio import dump_to_pickle, load_from_pickle
+from helpers.preprocessing import process_features
+from helpers.cashflow import get_cashflows, calc_IRR
 
 
-class StatusModels(object):
+class StatusModel(object):
     def __init__(self,
                  model=RandomForestRegressor(),
                  parameters={'n_estimators':100,
@@ -49,7 +49,7 @@ class StatusModels(object):
                          'home_other', 'home_none', 'home_any']
 
 
-    def train_status_models(self, df):
+    def train_statusmodel(self, df):
         '''
         Trains model for every grade for whole date_range
         '''

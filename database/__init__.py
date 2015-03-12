@@ -1,1 +1,0 @@
-from database import insert_into_mongodb, insert_into_postgresql

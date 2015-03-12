@@ -3,9 +3,9 @@ import pandas as pd
 from flask import Flask, render_template
 from fileio import dump_to_pickle, load_from_pickle
 from retrieve import retrieve_loan_data
-# from database import insert_into_mongodb, insert_into_postgresql
+from database import insert_into_mongodb, insert_into_postgresql
 from preprocessing import process_requests, process_features
-from models import currentmodel
+from model import currentmodel
 
 
 app = Flask(__name__)
@@ -14,9 +14,9 @@ filter_search = {'exclude_existing': False,
                  'funding_progress': 0,
                  'grades': {'All': False,
                             'A': True,
-                            'B': True,
-                            'C': True,
-                            'D': True,
+                            'B': False,
+                            'C': False,
+                            'D': False,
                             'E': False,
                             'F': False,
                             'G': False},
@@ -31,10 +31,10 @@ def rateflask():
     # loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
 
     print "Inserting results of API request to database..."
-    # insert_into_mongodb(loan_results, loan_details)
+    insert_into_mongodb(loan_results, loan_details)
 
     print "Pre-processing data..."
-    df_raw = process_requests(loan_results, loan_details)
+    df_raw = process_requests(loan_results, loan_details['loans'])
     df = process_features(df_raw, False)
 
     print "Loading models..."
@@ -57,13 +57,13 @@ def rateflask():
                              'percent_fund', 'int_rate', 'IRR', 'percent_diff']]
 
     print "Inserting processed data to database..."
-    # df_results = df_display.copy()
-    # df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
-    # results = df_results.values
+    df_results = df_display.copy()
+    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    results = df_results.values
 
-    # database_name = 'rateflask'
-    # table_name = 'results'
-    # insert_into_postgresql(database_name, table_name, results)
+    database_name = 'rateflask'
+    table_name = 'results'
+    insert_into_postgresql(database_name, table_name, results)
 
     print "Reformatting for display..."
     df_display['term'] = df_display['term'].map(lambda x: str(x) + ' mth')

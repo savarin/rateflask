@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from fileio import dump_to_pickle, load_from_pickle
-from cashflow import get_cashflows, calc_IRR
+from transfers.fileio import dump_to_pickle, load_from_pickle
+from helpers.cashflow import get_cashflows, calc_IRR
 
 
 def get_actual_payout(X, date_range_length):

@@ -4,7 +4,7 @@ from lendingclub.filters import Filter
 import time
 
 
-def retrieve_loan_data(filter_search):
+def request_loan_data(filter_search):
     '''
     Requests list of loans that can be invested in, then makes individual call
     for details of the loans. Results stored in MongoDB database.
