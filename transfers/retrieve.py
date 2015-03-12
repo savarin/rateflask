@@ -14,8 +14,8 @@ def request_loan_data(filter_search):
     club.authenticate()
 
     loan_results = club.search(filter_search, start_index=0, limit=1000)
-    loans = loan_results['loans']
-    loan_ids = [loan['loan_id'] for loan in loans]
+    loan_results = loan_results['loans']
+    loan_ids = [loan['loan_id'] for loan in loan_results]
 
     loan_details = []
     for loan_id in loan_ids:

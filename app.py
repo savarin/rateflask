@@ -1,45 +1,62 @@
 import numpy as np
 import pandas as pd
 from flask import Flask, render_template
-from fileio import dump_to_pickle, load_from_pickle
-from retrieve import retrieve_loan_data
-from database import insert_into_mongodb, insert_into_postgresql
-from preprocessing import process_requests, process_features
-from model import currentmodel
+from sklearn.ensemble import RandomForestRegressor
+from transfers.fileio import dump_to_pickle, load_from_pickle
+from transfers.retrieve import request_loan_data
+from transfers.database import insert_into_mongodb, insert_into_postgresql
+from helpers.preprocessing import process_requests, process_features
+from model.model import StatusModel
 
 
 app = Flask(__name__)
 
-filter_search = {'exclude_existing': False,
-                 'funding_progress': 0,
-                 'grades': {'All': False,
-                            'A': True,
-                            'B': False,
-                            'C': False,
-                            'D': False,
-                            'E': False,
-                            'F': False,
-                            'G': False},
-                 'term': {'Year3': True, 'Year5': False}}
+
+def run_process():
+    filter_search = {'exclude_existing': False,
+                     'funding_progress': 0,
+                     'grades': {'All': False,
+                                'A': True,
+                                'B': True,
+                                'C': True,
+                                'D': True,
+                                'E': False,
+                                'F': False,
+                                'G': False},
+                     'term': {'Year3': True, 'Year5': False}}
 
 
-@app.route('/')
-def rateflask():
     print "Requesting loan details..."
-    loan_results, loan_details = retrieve_loan_data(filter_search)
-    # loan_results = load_from_pickle('../pickle/loan_search_ABCD.pkl')
-    # loan_details = load_from_pickle('../pickle/loan_get_ABCD.pkl')
+    loan_results, loan_details = request_loan_data(filter_search)
 
     print "Inserting results of API request to database..."
     insert_into_mongodb(loan_results, loan_details)
 
     print "Pre-processing data..."
-    df_raw = process_requests(loan_results, loan_details['loans'])
+    df_raw = process_requests(loan_results, loan_details)
     df = process_features(df_raw, False)
 
     print "Loading models..."
-    model = load_from_pickle('pickle/model_test.pkl')
-    
+    try:
+        model = load_from_pickle('pickle/statusmodel.pkl')
+    except (OSError, IOError):
+        print "Model not found. Initializing training process, this might take some time..."
+        model = StatusModel(model=RandomForestRegressor,
+                            parameters={'n_estimators':100,
+                                         'max_depth':10})
+
+        print "Loading training data..."
+        df_3c = pd.read_csv('data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+        df_3b = pd.read_csv('data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+        df_train = pd.concat((df_3c, df_3b), axis=0)
+        
+        print "Pre-processing training data..."
+        df_train = process_features(df_train)
+
+        print "Training model..."
+        model.train_statusmodel(df_train)
+        dump_to_pickle(model, 'pickle/statusmodel.pkl')
+
     print "Calculating results for display..."
     IRR = model.expected_IRR(df, True)
     percent_fund = pd.DataFrame(loan_results)[['loanAmountRequested', 'loanAmtRemaining']]\
@@ -59,6 +76,7 @@ def rateflask():
     print "Inserting processed data to database..."
     df_results = df_display.copy()
     df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    df_results = df_results.drop(['percent_fund'], axis=1)
     results = df_results.values
 
     database_name = 'rateflask'
@@ -73,9 +91,14 @@ def rateflask():
     df_display['int_rate'] = df_display['int_rate'].map(lambda x: str(round(x*100,2)) + '%')
     df_display['IRR'] = df_display['IRR'].map(lambda x: str(round(x*100,2)) + '%')
     df_display['percent_diff'] = df_display['percent_diff'].map(lambda x: str(round(x*100,0)))
-    
+
     data = df_display.values
-    
+    return data
+
+
+@app.route('/')
+def rateflask():
+    data = run_process()
     return render_template('index.html', data=data)
 
 

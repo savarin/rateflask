@@ -54,7 +54,6 @@
           color: midnightblue;
         }
 
-        /* Style northward tooltips differently */
         .d3-tip.n:after {
           margin: -1px 0 0 0;
           top: 100%;
@@ -70,11 +69,9 @@
 	<script type="text/javascript" language="javascript" class="init">
 
 
-
 $(document).ready(function() {
 	$('#example').DataTable();
 } );
-
 
 
 	</script>
@@ -85,21 +82,8 @@ $(document).ready(function() {
 	<div class="container">
 		<section>
 			<h1 style="font-weight:900"> rateflask  </h1>
-<!-- 			<div class="info">
-				<p> <font size="2.8">placeholder text</font> </p>
-			</div>			 -->
 		</section>
 	</div>
-
-<!-- 	<div class="container">
-		<section>
-			
-		<div id="chartline1">
-			<p> CHART SHOULD BE HERE </p>
-		</div>			
-		</section>
-	</div>
- -->
 
 <div class="container-fluid">
     <div class="row">
@@ -123,41 +107,41 @@ $(document).ready(function() {
 						<th>Loan ID</th>
 						<th>Sub-grade</th>
 						<th>Term</th>
-                        <th>Amount</th>
-                        <th>% Funded</th>
-						<th>Interest rate</th>
-						<th>Adjusted rate</th>
-                        <th>% Difference</th>
+            <th>Amount</th>
+            <th>% Funded</th>
+						<th>Lending Club rate</th>
+						<th>Rateflask rate</th>
+            <th>% Difference</th>
 					</tr>
 				</thead>
 
 				<tfoot>
 					<tr>
-                        <th>Loan ID</th>
-                        <th>Sub-grade</th>
-                        <th>Term</th>
-                        <th>Amount</th>
-                        <th>% Funded</th>
-                        <th>Interest rate</th>
-                        <th>Adjusted rate</th>
-                        <th>% Difference</th>
+            <th>Loan ID</th>
+            <th>Sub-grade</th>
+            <th>Term</th>
+            <th>Amount</th>
+            <th>% Funded</th>
+            <th>Lending Club rate</th>
+            <th>Rateflask rate</th>
+            <th>% Difference</th>
 					</tr>
 				</tfoot>
 
 				<tbody>
 					
-                    {% for d in data %}
-                    <tr>
-                        <td> {{ d[0] }} </td>
-                        <td> {{ d[1] }} </td>
-                        <td> {{ d[2] }} </td>
-                        <td> {{ d[3] }} </td>
-                        <td> {{ d[4] }} </td>
-                        <td> {{ d[5] }} </td>
-                        <td> {{ d[6] }} </td>
-                        <td> {{ d[7] }} </td>
-                    </tr>   
-                    {% endfor %}
+          {% for d in data %}
+          <tr>
+            <td> {{ d[0] }} </td>
+            <td> {{ d[1] }} </td>
+            <td> {{ d[2] }} </td>
+            <td> {{ d[3] }} </td>
+            <td> {{ d[4] }} </td>
+            <td> {{ d[5] }} </td>
+            <td> {{ d[6] }} </td>
+            <td> {{ d[7] }} </td>
+          </tr>   
+          {% endfor %}
 
 				</tbody>
 			</table>
@@ -227,7 +211,7 @@ $(document).ready(function() {
         .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("IRR");
+        .text("RF rate");
 
     svg.selectAll(".bar")
         .data(data)
@@ -249,13 +233,10 @@ chart("#chartline2", "static/chart/chart2.tsv");
 chart("#chartline3", "static/chart/chart3.tsv");
 chart("#chartline4", "static/chart/chart4.tsv");
 
-
 function type(d) {
   d.rate = +d.rate;
   return d;
 }
-
-
 
 	</script>
 </body>
