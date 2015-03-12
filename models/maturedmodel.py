@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from preprocessing import dump_to_pickle, load_from_pickle, process_payment
+from fileio import dump_to_pickle, load_from_pickle
 from cashflow import get_cashflows, calc_IRR
 
 

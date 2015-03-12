@@ -1,15 +1,6 @@
-
 import numpy as np
 import pandas as pd
 from datetime import datetime
-import pickle
-
-def dump_to_pickle(file_object, file_path):
-    pickle.dump(file_object, open(file_path, 'w'))
-
-
-def load_from_pickle(file_path):
-    return pickle.load(open(file_path, 'r'))
 
 
 def process_features(df_raw, restrict_date=True, current_loans=True):
@@ -91,12 +82,9 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
 
     df.rename(columns={'collections_12_mths_ex_med': 'collect_12mths'}, inplace=True)
 
-    df['last_delinq'] = df['mths_since_last_delinq'].fillna(-1)
-    df['last_delinq'] = df['last_delinq'].map(lambda x: -1 if x == 'n/a' else x)
-    df['last_record'] = df['mths_since_last_record'].fillna(-1)
-    df['last_record'] = df['last_record'].map(lambda x: -1 if x == 'n/a' else x)
-    df['last_derog'] = df['mths_since_last_major_derog'].fillna(-1)
-    df['last_derog'] = df['last_derog'].map(lambda x: -1 if x == 'n/a' else x)
+    df['last_delinq'] = df['mths_since_last_delinq'].map(lambda x: -1 if x == 'n/a' else x)
+    df['last_record'] = df['mths_since_last_record'].map(lambda x: -1 if x == 'n/a' else x)
+    df['last_derog'] = df['mths_since_last_major_derog'].map(lambda x: -1 if x == 'n/a' else x)
 
     df['purpose_debt'] = df['purpose'].map(lambda x: x == 'debt_consolidation').astype(int)
     df['purpose_credit'] = df['purpose'].map(lambda x: x == 'credit_card').astype(int)
@@ -123,71 +111,3 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
                    'mths_since_last_major_derog', 'purpose', 'home_ownership']), axis=1)
 
     return df
-
-
-def process_payment(df_raw):
-    '''
-    Process payment information pertaining to matured loans.
-    '''
-    grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
-    term_mask = df_raw['term'].str.contains('36', na=False)
-    date_mask = (df_raw['issue_d'].str.contains('2009', na=False)) \
-                | (df_raw['issue_d'].str.contains('2010', na=False)) \
-                | (df_raw['issue_d'].str.contains('2011', na=False))
-
-    df_raw = df_raw[grade_mask & term_mask & date_mask]
-
-    df = df_raw[['id', 'sub_grade', 'installment']]
-    df['int_rate'] = df_raw['int_rate'].map(lambda x: float(str(x).strip('%')) / 100).values
-
-    # Residual amount for current loans and those in grace period under
-    # consideration are sufficiently small and considered fully paid
-    df['default_status'] = df_raw['loan_status'].map({
-                                        'Fully Paid': 0, 
-                                        'Does not meet the credit policy.  Status:Fully Paid': 0, 
-                                        'Current': 0,
-                                        'In Grace Period': 0,
-                                        'Charged Off': 1, 
-                                        'Does not meet the credit policy.  Status:Charged Off': 1,
-                                        'Late (31-120 days)': 1})
-
-    df['total_rec_pymnt'] = df_raw['total_rec_prncp'] + df_raw['total_rec_int']
-    df['total_at_maturity'] = df_raw['total_rec_late_fee'] + df_raw['recoveries'] \
-                                     - df_raw['collection_recovery_fee']
-
-    # Calculates the number of months installment fully paid
-    df['months_paid'] = df[['total_rec_pymnt', 'installment']] \
-                                .apply(lambda x: np.floor(x['total_rec_pymnt'] \
-                                                 / x['installment']), axis=1)
-
-    # Calculates the fraction of installment paid on final month
-    df['residual'] = df[['total_rec_pymnt', 'installment', 'months_paid']] \
-                            .apply(lambda x: (x['total_rec_pymnt'] / x['installment']) \
-                                             - x['months_paid'], axis=1)
-
-    # Calculates the amount received from recovery, assumed to be at maturity
-    # and quoted as a multiple of the monthly installment
-    df['recovery'] = df[['total_at_maturity', 'installment']] \
-                            .apply(lambda x: (x['total_at_maturity'] \
-                                              / x['installment']), axis=1)
-
-    return df[['sub_grade', 'int_rate', 
-               'default_status', 'months_paid', 'residual', 'recovery']]
-
-
-def convert_to_array(df, date_range, features, create_label=False, 
-                     label='sub_grade', label_one='A1', label_zero='D5'):
-    '''
-    Converts dataframe to array, with option to create target column
-    '''
-    date_mask = df['issue_d'].isin(date_range)
-
-    if create_label:
-        label_mask = df[label].isin([label_one, label_zero])
-        X = df[date_mask & label_mask][features].values
-        y = df[date_mask & label_mask][label].map({label_one:1, label_zero:0}).values 
-    else:
-        X = df[date_mask][features].values
-        y = df[date_mask][label].values 
-
-    return X, y

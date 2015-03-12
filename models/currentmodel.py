@@ -3,10 +3,9 @@ import pandas as pd
 from collections import defaultdict
 from sklearn.ensemble import RandomForestRegressor
 from scipy.optimize import curve_fit
-import pickle
-from preprocessing import dump_to_pickle, load_from_pickle, process_features
-from cashflow import calc_monthly_payment, get_monthly_payments, \
-                     get_compound_curve, get_cashflows, calc_IRR
+from fileio import dump_to_pickle, load_from_pickle
+from preprocessing import process_features
+from cashflow import get_cashflows, calc_IRR
 
 
 class StatusModels(object):
