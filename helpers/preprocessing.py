@@ -64,7 +64,7 @@ def process_requests(loan_results, loan_details):
     return df_raw
 
 
-def process_features(df_raw, restrict_date=True, current_loans=True):
+def process_features(df_raw, restrict_date=True, current_loans=True, features_dict={}):
     '''
     Restricts data to loans of grades A, B, C, and D of desired issue dates, 
     then processes data by filling missing values and map to numerical format.
@@ -117,11 +117,16 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
 
     df['term'] = df['term'].map(lambda x: int(str(x).strip(' months')))
 
+    # Fills in missing value with the mean, then storing the value to fill in
+    # missing values in test data.
     df['emp_length'] = df['emp_length'].map(lambda x: '0.5 years' if x == '< 1 year' else x)
     df['emp_length'] = df['emp_length'].map(lambda x: '10 years' if x == '10+ years' else x)
     df['emp_length'] = df['emp_length'].map(lambda x: '-1 years' if x == 'n/a' else x)
     df['emp_length'] = df['emp_length'].map(lambda x: float(x.strip(' years')))
-    emp_length_mean = np.mean([x for x in df['emp_length'].values if x > 0])
+    if features_dict == {}:
+        emp_length_mean = np.mean([x for x in df['emp_length'].values if x > 0])
+    else:
+        emp_length_mean = features_dict['emp_length']
     df['emp_length'] = df['emp_length'].map(lambda x: emp_length_mean if x < 0 else x)
 
     df['annual_inc'] = df['annual_inc'].map(lambda x: float(x) / 12)
@@ -130,15 +135,24 @@ def process_features(df_raw, restrict_date=True, current_loans=True):
     df['fico_range_low'] = (df['fico_range_low'] + df['fico_range_high']) / 2.
     df.rename(columns={'fico_range_low': 'fico'}, inplace=True)
 
+    # First, set date of earliest credit line to be the issue date of the loan
+    # if value not available. Next convert to length of time between earliest
+    # credit line and issue date of the loan.
     df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x: 
                                 x['issue_d'] if pd.isnull(x['earliest_cr_line']) 
                                              else x['earliest_cr_line'], axis=1)
     df['earliest_cr_line'] = df[['earliest_cr_line', 'issue_d']].apply(lambda x: \
                                 (datetime.strptime(x['issue_d'], '%b-%Y') \
-                                - datetime.strptime(x['earliest_cr_line'], '%b-%Y')).days / 30, axis=1)
+                                - datetime.strptime(x['earliest_cr_line'], \
+                                                '%b-%Y')).days / 30, axis=1)
 
+    # Fills in missing value with the mean, then storing value to fill in
+    # missing values in test data
     df['revol_util'] = df['revol_util'].map(lambda x: float(str(x).strip('%')) / 100)
-    revol_util_mean = np.mean(df['revol_util'])
+    if features_dict == {}:
+        revol_util_mean = np.mean(df['revol_util'])
+    else:
+        revol_util_mean = features_dict['revol_util']
     df['revol_util'] = df['revol_util'].fillna(revol_util_mean)
 
     df.rename(columns={'collections_12_mths_ex_med': 'collect_12mths'}, inplace=True)

@@ -1,15 +1,35 @@
 import numpy as np
 import pandas as pd
-from flask import Flask, render_template
+from flask import Flask, render_template, make_response
 from sklearn.ensemble import RandomForestRegressor
+from functools import wraps, update_wrapper
+from datetime import datetime 
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from transfers.retrieve import request_loan_data
 from transfers.database import insert_into_mongodb, insert_into_postgresql
 from helpers.preprocessing import process_requests, process_features
+from helpers.postprocessing import generate_for_charts, reformat_for_display
 from model.model import StatusModel
-
+from model.train import fit_new_model
 
 app = Flask(__name__)
+
+
+def nocache(view):
+    '''
+    Disables caching to allow charts to refresh.
+    '''
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Last-Modified'] = datetime.now()
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, \
+                                             post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+
+    return update_wrapper(no_cache, view) 
 
 
 def run_process():
@@ -29,33 +49,19 @@ def run_process():
     print "Requesting loan details..."
     loan_results, loan_details = request_loan_data(filter_search)
 
-    print "Inserting results of API request to database..."
-    insert_into_mongodb(loan_results, loan_details)
+    # print "Inserting results of API request to database..."
+    # insert_into_mongodb(loan_results, loan_details)
+
+    print "Loading model..."
+    try:
+        model = load_from_pickle('pickle/model.pkl')
+    except (OSError, IOError):
+        print "Model not found. Initializing training process, this might take some time..."
+        model = fit_new_model()
 
     print "Pre-processing data..."
     df_raw = process_requests(loan_results, loan_details)
-    df = process_features(df_raw, False)
-
-    print "Loading models..."
-    try:
-        model = load_from_pickle('pickle/statusmodel.pkl')
-    except (OSError, IOError):
-        print "Model not found. Initializing training process, this might take some time..."
-        model = StatusModel(model=RandomForestRegressor,
-                            parameters={'n_estimators':100,
-                                         'max_depth':10})
-
-        print "Loading training data..."
-        df_3c = pd.read_csv('data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
-        df_3b = pd.read_csv('data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
-        df_train = pd.concat((df_3c, df_3b), axis=0)
-        
-        print "Pre-processing training data..."
-        df_train = process_features(df_train)
-
-        print "Training model..."
-        model.train_statusmodel(df_train)
-        dump_to_pickle(model, 'pickle/statusmodel.pkl')
+    df = process_features(df_raw, restrict_date=False, features_dict=model.features_dict)
 
     print "Calculating results for display..."
     IRR = model.expected_IRR(df, True)
@@ -73,30 +79,30 @@ def run_process():
     df_display = df_display[['id', 'sub_grade', 'term', 'loan_amnt', 
                              'percent_fund', 'int_rate', 'IRR', 'percent_diff']]
 
+
     print "Inserting processed data to database..."
-    df_results = df_display.copy()
+    df_results = df_display.drop(['percent_fund'], axis=1).copy()
     df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
-    df_results = df_results.drop(['percent_fund'], axis=1)
     results = df_results.values
 
     database_name = 'rateflask'
     table_name = 'results'
     insert_into_postgresql(database_name, table_name, results)
 
-    print "Reformatting for display..."
-    df_display['term'] = df_display['term'].map(lambda x: str(x) + ' mth')
-    df_display['loan_amnt'] = df_display['loan_amnt'].map(lambda x: '$' \
-                                                        + str(x/1000) + ',' + str(x)[-3:])
-    df_display['percent_fund'] = df_display['percent_fund'].map(lambda x: str(round(x*100,0)))
-    df_display['int_rate'] = df_display['int_rate'].map(lambda x: str(round(x*100,2)) + '%')
-    df_display['IRR'] = df_display['IRR'].map(lambda x: str(round(x*100,2)) + '%')
-    df_display['percent_diff'] = df_display['percent_diff'].map(lambda x: str(round(x*100,0)))
+    print "Generating data for charts..."
+    df_max = df_display.groupby('sub_grade').max()['IRR']
+    generate_for_charts(df_max)
 
-    data = df_display.values
+    print "Reformatting for display..."
+    df_final = reformat_for_display(df_display)
+
+    print "Process completed, displaying results..."
+    data = df_final.values
     return data
 
 
 @app.route('/')
+@nocache
 def rateflask():
     data = run_process()
     return render_template('index.html', data=data)

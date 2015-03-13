@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from transfers.fileio import dump_to_pickle, load_from_pickle
+from helpers.preprocessing import process_payment
 from helpers.cashflow import get_cashflows, calc_IRR
+
 
 
 def get_actual_payout(X, date_range_length):
@@ -78,4 +79,4 @@ def actual_IRR(df,
                                             X_compound_rate,
                                             date_range_length)
 
-    return calc_IRR(actual_cashflows, term)
+    return calc_IRR(actual_cashflows, term)   

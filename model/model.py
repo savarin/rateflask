@@ -14,12 +14,21 @@ class StatusModel(object):
                  parameters={'n_estimators':100,
                              'max_depth':10}):
         '''
-        model: choice of model
-        parameters: parameter for model, dictionary
+        Model to calculate expected IRR based on loan features, e.g. FICO score.
+        Training data is set of 3-year loans issued between 2012 and 2014, i.e.
+        not yet matured. Composed of 4x36 models, i.e. one for each grade (A, B,
+        C, and D) - month pair (Dec 2014 - Jan 2012).
+
+        Parameters:
+        model: Scikit-learn regression model. Random Forest Regressor chosen as 
+        default due to excellent 'out-of-the-box' performance and versatility.
+        sklearn class.
+        parameters: Parameters for sklearn class. dictionary.
         '''
         self.model = model
         self.parameters = parameters
         self.model_dict = defaultdict(list)
+        self.features_dict = {}
         self.term = 3
         self.grade_range = ['A', 'B', 'C', 'D']
 
@@ -49,9 +58,13 @@ class StatusModel(object):
                          'home_other', 'home_none', 'home_any']
 
 
-    def train_statusmodel(self, df):
+    def train_model(self, df):
         '''
-        Trains model for every grade for whole date_range
+        Trains model for every grade for whole date range, generating 4x36
+        models for every grade-month pair.
+
+        Parameters:
+        df: Training data with n features. pandas dataframe.
         '''
         grade_dict = defaultdict(list)        
         
@@ -71,17 +84,35 @@ class StatusModel(object):
 
         self.model_dict = grade_dict
 
+        emp_length_mean = np.mean([x for x in df['emp_length'].values if x > 0])
+        revol_util_mean = np.mean(df['revol_util'])
+
+        self.features_dict = {'emp_length': emp_length_mean,
+                             'revol_util': revol_util_mean}
 
     def exponential_dist(self, x, beta):
         '''
-        Exponential curve for payout probability smoothing
+        Exponential curve for payout probability smoothing.
+
+        Parameters:
+        x: Value of x. float.
+        beta: Beta coefficient, to be fitted in smoothing process. float.
         '''
         return np.exp(-x / beta)
 
 
     def get_expected_payout(self, X, X_sub_grade):
         '''
-        Predicts payout probability for whole date range
+        Predicts payout probability for whole date range, i.e. calculates 
+        likelihood of receiving a particular payment on a particular month, for
+        36 months.
+
+        Parameters:
+        X: Values pertaining to loan features, with n columns. numpy array.
+        X_sub_grade: Sub-grade of each loan in X. numpy array.
+
+        Returns:
+        Likelihood of receiving payment on specific date. numpy array.
         '''
         expected_payout = []
 
@@ -118,7 +149,18 @@ class StatusModel(object):
         '''
         Generates expected cashflow for each loan, i.e. monthly payments 
         multiplied by probability of receiving that payment and compounded to
-        the maturity of the loan
+        the maturity of the loan.
+
+        Parameters:
+        X: Values pertaining to loan features, with n columns. numpy array.
+        X_int_rate: Interest rate paid by each loan in X, 1-dimensional. numpy array.
+        X_compound_rate: Compounding rate for time value of money calculations, 
+        1-dimensional. numpy array.
+        X_sub_grade: Sub-grade of each loan in X, 1-dimensional. numpy array.
+        date_range_length: Total length of calculation period, normally 36. integer.
+
+        Returns:
+        Expected cashflow over the life of the loan. numpy array. 
         '''
         expected_payout = self.get_expected_payout(X, X_sub_grade)
         return get_cashflows(expected_payout, X_int_rate, X_compound_rate, 
@@ -131,15 +173,23 @@ class StatusModel(object):
                            actual_as_compound=True,
                            compound_rate=0.01):
         '''
-        Calculates IRR for loans that have not yet matured.
+        Calculates expected IRR, i.e. the cube root of the sum of all the
+        cashflows post-adjustment by risk and time. Expected IRR figure allows
+        comparisons to be made between loans of the same sub-grade.
 
-        actual_rate: If using interest rates in data or custom, Boolean
-        rate_dict: Custom dictionary with sub-grade as keys as interest rate as
-        values, dictionary
+        Parameters:
+        df: Training data with n features. pandas dataframe.
+        actual_rate: Choice as to whether actual interest rate is to be used, or
+        a custom entry. Custom interest rates are generally chosen to allow for
+        comparison of loans of the same sub-grade over time. boolean
+        rate_dict: Custom interest rate dictionary if actual_rate was True. Key-
+        value pair of loan sub-grade and interest rate. dictionary.
+        actual_as_compound: Choice as to whether actual interest rate is to be
+        used for time value of money calculations. boolean.
+        compound_rate: Custom interest rate if actual_as_compound was true. float.
 
-        actual_as_compound: If using interest rates in data as compound rate or 
-        custom, Boolean
-        compound_rate: Custom interest rate for compounding, float
+        Returns:
+        Expected IRR of each loan. float.
         '''
         X = df[self.features].values
         date_range_length = self.term * 12
