@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import dill
 from sklearn.ensemble import RandomForestRegressor
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from helpers.preprocessing import process_features, process_payment
@@ -140,6 +141,9 @@ def compare_IRR():
 
 
 if __name__ == '__main__':
-    # test_expected_current()
-    # test_actual_matured()
-    compare_IRR()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'compare':
+            compare_IRR()
+    else:
+        test_expected_current()
+        test_actual_matured()    
