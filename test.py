@@ -5,14 +5,18 @@ from sklearn.ensemble import RandomForestRegressor
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from helpers.preprocessing import process_features, process_payment
 from model.model import StatusModel
-from model.train import train_for_app
+from model.start import initialize_model_class
 from model.validate import actual_IRR
 
 
 def test_expected_current():
     print "Loading data..."
-    df_3c = pd.read_csv('data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
-    df_3b = pd.read_csv('data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    try:
+        df_3c = pd.read_csv('data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
+        df_3b = pd.read_csv('data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
+    except (OSError, IOError):
+        print "Training data not found. Please install from https://www.lendingclub.com/info/download-data.action"
+
     df_raw = pd.concat((df_3c, df_3b), axis=0)
     
     print "Pre-processing data..."
@@ -24,9 +28,12 @@ def test_expected_current():
                                      'max_depth':10})
 
     print "Training model..."
-    model.train_model(df)
-    dump_to_pickle(model, 'pickle/test.pkl')
-    # model = load_from_pickle('pickle/test.pkl')
+    try:
+        model = load_from_pickle('pickle/model.pkl')
+    except (OSError, IOError):
+        print "Model not found. Training model, this might take some time..."
+        model.train_model(df)
+        dump_to_pickle(model, 'pickle/model.pkl')
 
     print "Calculating IRR..."
     int_rate_dict = {'A1':0.0603, 'A2':0.0649, 'A3':0.0699, 'A4':0.0749, 'A5':0.0819,
@@ -52,8 +59,11 @@ def test_expected_current():
 
 def test_actual_matured():
     print "Loading data..."
-    df_3a = pd.read_csv('data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
-    df_raw = df_3a.copy()
+    try:
+        df_3a = pd.read_csv('data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
+        df_raw = df_3a.copy()
+    except (OSError, IOError):
+        print "Training data not found. Please install from https://www.lendingclub.com/info/download-data.action"
 
     print "Pre-processing data..."
     df = process_payment(df_raw)
@@ -86,7 +96,7 @@ def compare_IRR():
         model = load_from_pickle('pickle/test.pkl')
     except (OSError, IOError):
         print "Model not found. Initializing training process, this might take some time..."
-        model = fit_new_model()
+        model = initialize_model()
 
     print "Calculating expected IRR of loans that have matured..."
     df_3a = pd.read_csv('data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
@@ -103,24 +113,22 @@ def compare_IRR():
 
     print "Calculating actual IRR of loans that have matured..."
     df_actual = process_payment(df_3a.copy())
-
     IRR_true = actual_IRR(df_actual, actual_rate=False, rate_dict=int_rate_dict)
 
-
     print "Collecting results..."
-    df_result = df_3a[['id', 'sub_grade']]
+    df_result = df_expected[['id', 'sub_grade']].copy()
 
     df_result['IRR_predict'] = IRR_predict
     df_result['IRR_true'] = IRR_true
     df_result['IRR_difference'] = df_result['IRR_true'] - df_result['IRR_predict']
 
-    print "Comparison of IRR by subgrade:", df_select.groupby('sub_grade').mean()
+    print "Comparison of IRR by subgrade:", df_result.groupby('sub_grade').mean()
 
     print "Plotting results..."
     plt.figure(figsize = (12, 6))
     x = xrange(20)
-    y_true = df_select.groupby('sub_grade').mean()['IRR_true']
-    y_predict = df_select.groupby('sub_grade').mean()['IRR_predict']
+    y_true = df_result.groupby('sub_grade').mean()['IRR_true']
+    y_predict = df_result.groupby('sub_grade').mean()['IRR_predict']
 
     plt.plot(x, y_true, label='Actual IRR')
     plt.plot(x, y_predict, label='Predicted IRR')
@@ -128,6 +136,7 @@ def compare_IRR():
     plt.xlabel('Sub-grade, 0:A1 19:D5')
     plt.ylabel('IRR')     
     plt.title("Comparison of predicted vs true IRR")
+    plt.show()
 
 
 if __name__ == '__main__':

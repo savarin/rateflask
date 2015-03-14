@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
+import sys
+import dill
 from flask import Flask, render_template, make_response
 from sklearn.ensemble import RandomForestRegressor
+from collections import defaultdict, deque
 from functools import wraps, update_wrapper
 from datetime import datetime 
 from transfers.fileio import dump_to_pickle, load_from_pickle
@@ -10,9 +13,15 @@ from transfers.database import insert_into_mongodb, insert_into_postgresql
 from helpers.preprocessing import process_requests, process_features
 from helpers.postprocessing import generate_for_charts, reformat_for_display
 from model.model import StatusModel
-from model.train import fit_new_model
+from model.start import initialize_model
+
 
 app = Flask(__name__)
+
+DATA = deque('0')
+datetime_now = datetime.now()
+DATETIME_NOW = [datetime_now.strftime("%b"), datetime_now.day, datetime_now.year,
+                datetime_now.strftime("%H"), datetime_now.strftime("%M")]
 
 
 def nocache(view):
@@ -49,15 +58,18 @@ def run_process():
     print "Requesting loan details..."
     loan_results, loan_details = request_loan_data(filter_search)
 
-    # print "Inserting results of API request to database..."
-    # insert_into_mongodb(loan_results, loan_details)
+    print "Inserting results of API request to database..."
+    try:
+        insert_into_mongodb(loan_results, loan_details)
+    except Exception:
+        print "MongoDB connection error, proceeding to next step..."
 
     print "Loading model..."
     try:
         model = load_from_pickle('pickle/model.pkl')
     except (OSError, IOError):
         print "Model not found. Initializing training process, this might take some time..."
-        model = fit_new_model()
+        model = initialize_model()
 
     print "Pre-processing data..."
     df_raw = process_requests(loan_results, loan_details)
@@ -70,13 +82,14 @@ def run_process():
                                         / float(x['loanAmountRequested']), axis=1).values
 
     df_display = df[['id', 'sub_grade', 'term', 'loan_amnt', 'int_rate']].copy()
+    df_display['datetime_now'] = "\'" + str(datetime_now) + "\'"
     df_display['percent_fund'] = percent_fund
     df_display['IRR'] = IRR
     df_display['percent_diff'] = df_display[['int_rate', 'IRR']]\
                                     .apply(lambda x: (x['int_rate'] - x['IRR']) \
                                                         / x['int_rate'], axis=1)
 
-    df_display = df_display[['id', 'sub_grade', 'term', 'loan_amnt', 
+    df_display = df_display[['id', 'datetime_now', 'sub_grade', 'term', 'loan_amnt', 
                              'percent_fund', 'int_rate', 'IRR', 'percent_diff']]
 
 
@@ -87,7 +100,10 @@ def run_process():
 
     database_name = 'rateflask'
     table_name = 'results'
-    insert_into_postgresql(database_name, table_name, results)
+    try:
+        insert_into_postgresql(database_name, table_name, results)
+    except Exception:
+        print "PostgreSQL connection error, proceeding to next step..."
 
     print "Generating data for charts..."
     df_max = df_display.groupby('sub_grade').max()['IRR']
@@ -101,12 +117,24 @@ def run_process():
     return data
 
 
+@app.route('/refresh')
+@nocache
+def refresh():
+    results = run_process()
+    DATA.append(results)
+    DATA.popleft()
+    
+    return "Calculations based on latest update completed."
+
+
 @app.route('/')
 @nocache
 def rateflask():
-    data = run_process()
-    return render_template('index.html', data=data)
+    return render_template('index.html', data=DATA[-1], datetime_now=DATETIME_NOW)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    debug_state = True
+    if sys.argv[1] == 'production':
+        debug_state = False
+    app.run(host='0.0.0.0', port=8000, debug=debug_state)

@@ -29,6 +29,7 @@ def reformat_for_display(df_display):
     '''
     Reformat details for data table.
     '''
+    df_display = df_display.drop(['datetime_now'], axis=1)
     df_display['term'] = df_display['term'].map(lambda x: str(x) + ' mth')
     df_display['loan_amnt'] = df_display['loan_amnt'].map(lambda x: '$' \
                                                 + str(x/1000) + ',' + str(x)[-3:])

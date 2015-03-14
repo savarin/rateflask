@@ -27,6 +27,7 @@ def insert_into_postgresql(database_name, table_name, results):
         CREATE TABLE IF NOT EXISTS {}
             (
                 id VARCHAR (50),
+                datetime_added VARCHAR (50),
                 sub_grade VARCHAR (50),
                 term VARCHAR (50),
                 amount VARCHAR (50),
@@ -44,7 +45,7 @@ def insert_into_postgresql(database_name, table_name, results):
             cur.execute(
                 ''' 
                 INSERT INTO {}
-                VALUES ({}, {}, {}, {}, {}, {}, {});
+                VALUES ({}, {}, {}, {}, {}, {}, {}, {});
                 '''.format(table_name, *result)
 
             )

@@ -23,11 +23,25 @@
         td { text-align: center; }
         /*td:nth-child(5) { text-align: right; }*/
 
+        .axis text {
+          font: 11px sans-serif;
+        }
+
         .axis path,
         .axis line {
           fill: none;
           stroke: #000;
           shape-rendering: crispEdges;
+        }
+
+        .center-block {
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .element {
+          .center-block();
         }
 
         /*.bar {
@@ -38,15 +52,19 @@
           fill: orange ;
         }
 
-        .axis text {
-          font: 11px sans-serif;
-        }
-
         .axis path,
         .axis line {
           fill: none;
           stroke: #000;
           shape-rendering: crispEdges;
+        }
+
+        .tick_label
+        {
+            font-size: 15pt;
+            font-family: Verdana;
+            color: gray;
+            fill-opacity: .6;
         }
 
         .d3-tip {
@@ -85,35 +103,33 @@ $(document).ready(function() {
 
 	<div class="container">
 		<section>
-			<h1> rateflask  </h1>
+			<h1 style="font-weight:900"> rateflask  </h1>
 		</section>
 	</div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-6">
-          <div id="chartline1" align="center"></div>
-        </div>
-        <div class="col-md-6">
-          <div id="chartline2" align="center"></div>
-        </div>
-    </div>
-        <div class="row">
-        <div class="col-md-6">
-          <div id="chartline3" align="center"></div>
-        </div>
-        <div class="col-md-6"> 
-          <div id="chartline4" align="center"></div>
-        </div>
-    </div>
-</div>
+  <div class="container-fluid">
+      <div class="row">
+          <div class="col-md-6">
+            <div id="chartline1" align="center"></div>
+          </div>
+          <div class="col-md-6">
+            <div id="chartline2" align="center"></div>
+          </div>
+      </div>
+          <div class="row">
+          <div class="col-md-6">
+            <div id="chartline3" align="center"></div>
+          </div>
+          <div class="col-md-6"> 
+            <div id="chartline4" align="center"></div>
+          </div>
+      </div>
+  </div>
 
 	<div class="container">
 		<section>
 			<div class="info">
-				<p> <font size="2.8">last update {{ datetime_now[0] }} {{ datetime_now[1] }}
-        {{ datetime_now[2] }}  {{ datetime_now[3] }}:{{ datetime_now[4] }}
-        </font> </p>
+				<p> <font size="2.8">last update Mar 11 2015 10:00</font> </p>
 			</div>
 			<table id="example" class="display" cellspacing="0" width="100%">
 				<thead>
@@ -169,8 +185,8 @@ $(document).ready(function() {
 	
     function chart(chartname, datafile) {
 
-  var margin = {top: 40, right: 40, bottom: 40, left: 40},
-      width = 475 - margin.left - margin.right,
+  var margin = {top: 30, right: 0, bottom: 30, left: 40},
+      width = 435 - margin.left - margin.right,
       height = 250 - margin.top - margin.bottom;
 
   var formatPercent = d3.format(".0%");
@@ -178,8 +194,7 @@ $(document).ready(function() {
   var x = d3.scale.ordinal()
       .rangeRoundBands([0, width], .20);
 
-  var y = d3.scale.linear()
-      .range([height, 0]);
+  var y = d3.scale.linear().range([height, 0]);
 
   var xAxis = d3.svg.axis()
       .scale(x)
@@ -189,6 +204,7 @@ $(document).ready(function() {
       .scale(y)
       .orient("left")
       .ticks(5, "%");
+
 
   var formatAsPercentage = d3.format(".2f")
 
@@ -210,7 +226,7 @@ $(document).ready(function() {
 
   d3.tsv(datafile, type, function(error, data) {
     x.domain(data.map(function(d) { return d.subgrade; }));
-    y.domain([0, 0.11]);
+    y.domain([0, 0.12]);
 
     svg.append("g")
         .attr("class", "x axis")
@@ -235,17 +251,20 @@ $(document).ready(function() {
         .attr("width", x.rangeBand())
         .attr("y", function(d) { return y(d.rate); })
         .attr("height", function(d) { return height - y(d.rate); })
-        .attr("fill", function(d) {return "rgb(0, 0, " + (325 -  Math.round((d.rate)*2000)) + ")";})
+        .attr("fill", function(d) {return "rgb(" 
+                                   + (100 -  Math.round((d.rate)*1000)) + "," 
+                                   + (100 -  Math.round((d.rate)*1000)) + ","
+                                   + (340 -  Math.round((d.rate)*2250)) + ")";})
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide)
 
   });
 }
 
-chart("#chartline1", "static/chart/chart1.tsv");
-chart("#chartline2", "static/chart/chart2.tsv");
-chart("#chartline3", "static/chart/chart3.tsv");
-chart("#chartline4", "static/chart/chart4.tsv");
+chart("#chartline1", "../static/chart/chart1.tsv");
+chart("#chartline2", "../static/chart/chart2.tsv");
+chart("#chartline3", "../static/chart/chart3.tsv");
+chart("#chartline4", "../static/chart/chart4.tsv");
 
 function type(d) {
   d.rate = +d.rate;

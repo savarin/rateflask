@@ -6,7 +6,7 @@ from helpers.preprocessing import process_features
 from model import StatusModel
 
 
-def fit_new_model():
+def initialize_model():
     model = StatusModel(model=RandomForestRegressor,
                         parameters={'n_estimators':100,
                                      'max_depth':10})
