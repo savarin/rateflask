@@ -135,6 +135,9 @@ def rateflask():
 
 if __name__ == '__main__':
     debug_state = True
-    if sys.argv[1] == 'production':
-        debug_state = False
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'production':
+            debug_state = False
+
     app.run(host='0.0.0.0', port=8000, debug=debug_state)
