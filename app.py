@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import sys
-import dill
 from flask import Flask, render_template, make_response
 from sklearn.ensemble import RandomForestRegressor
 from collections import defaultdict, deque
@@ -19,6 +18,7 @@ from model.start import initialize_model
 app = Flask(__name__)
 
 DATA = deque('0')
+# datetime example: Mar 16 2015 13:09
 datetime_now = datetime.now()
 DATETIME_NOW = [datetime_now.strftime("%b"), datetime_now.day, datetime_now.year,
                 datetime_now.strftime("%H"), datetime_now.strftime("%M")]
@@ -41,42 +41,12 @@ def nocache(view):
     return update_wrapper(no_cache, view) 
 
 
-def run_process():
-    filter_search = {'exclude_existing': False,
-                     'funding_progress': 0,
-                     'grades': {'All': False,
-                                'A': True,
-                                'B': True,
-                                'C': True,
-                                'D': True,
-                                'E': False,
-                                'F': False,
-                                'G': False},
-                     'term': {'Year3': True, 'Year5': False}}
+def process_for_display(model, df, loan_results):
+    '''
+    Processes inputs for data table.
+    '''
 
-
-    print "Requesting loan details..."
-    loan_results, loan_details = request_loan_data(filter_search)
-
-    print "Inserting results of API request to database..."
-    try:
-        insert_into_mongodb(loan_results, loan_details)
-    except Exception:
-        print "MongoDB connection error, proceeding to next step..."
-
-    print "Loading model..."
-    try:
-        model = load_from_pickle('pickle/model.pkl')
-    except (OSError, IOError):
-        print "Model not found. Initializing training process, this might take some time..."
-        model = initialize_model()
-
-    print "Pre-processing data..."
-    df_raw = process_requests(loan_results, loan_details)
-    df = process_features(df_raw, restrict_date=False, features_dict=model.features_dict)
-
-    print "Calculating results for display..."
-    IRR = model.expected_IRR(df, True)
+    IRR = model.expected_IRR(df, actual_rate=True)
     percent_fund = pd.DataFrame(loan_results)[['loanAmountRequested', 'loanAmtRemaining']]\
                                 .apply(lambda x: 1 - x['loanAmtRemaining'] \
                                         / float(x['loanAmountRequested']), axis=1).values
@@ -92,18 +62,38 @@ def run_process():
     df_display = df_display[['id', 'datetime_now', 'sub_grade', 'term', 'loan_amnt', 
                              'percent_fund', 'int_rate', 'IRR', 'percent_diff']]
 
+    return df_display
+
+
+def run_process():
+    print "Requesting loan details..."
+    loan_results, loan_details = request_loan_data()
+
+    print "Inserting results of API request to database..."
+    try:
+        insert_into_mongodb(loan_results, loan_details)
+    except Exception:
+        print "MongoDB error, proceeding to next step..."
+
+    print "Loading model..."
+    try:
+        model = load_from_pickle('pickle/model.pkl')
+    except OSError, IOError:
+        print "Model not found. Initializing training process, this might take some time..."
+        model = initialize_model()
+
+    print "Pre-processing data..."
+    df_raw = process_requests(loan_results, loan_details)
+    df = process_features(df_raw, restrict_date=False, features_dict=model.features_dict)
+
+    print "Calculating results for display..."
+    df_display = process_for_display(model, df, loan_results)
 
     print "Inserting processed data to database..."
-    df_results = df_display.drop(['percent_fund'], axis=1).copy()
-    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
-    results = df_results.values
-
-    database_name = 'rateflask'
-    table_name = 'results'
     try:
-        insert_into_postgresql(database_name, table_name, results)
+        insert_into_postgresql(df_display)
     except Exception:
-        print "PostgreSQL connection error, proceeding to next step..."
+        print "PostgreSQL error, proceeding to next step..."
 
     print "Generating data for charts..."
     df_max = df_display.groupby('sub_grade').max()['IRR']

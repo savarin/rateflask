@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
-import dill
 from sklearn.ensemble import RandomForestRegressor
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from helpers.preprocessing import process_features, process_payment
@@ -16,7 +15,7 @@ def test_expected_current():
     try:
         df_3c = pd.read_csv('data/LoanStats3c_securev1.csv', header=True).iloc[:-2, :]
         df_3b = pd.read_csv('data/LoanStats3b_securev1.csv', header=True).iloc[:-2, :]
-    except (OSError, IOError):
+    except OSError, IOError:
         print "Training data not found. Please install from https://www.lendingclub.com/info/download-data.action"
 
     df_raw = pd.concat((df_3c, df_3b), axis=0)
@@ -32,7 +31,7 @@ def test_expected_current():
     print "Training model..."
     try:
         model = load_from_pickle('pickle/model.pkl')
-    except (OSError, IOError):
+    except OSError, IOError:
         print "Model not found. Training model, this might take some time..."
         model.train_model(df)
         dump_to_pickle(model, 'pickle/model.pkl')
@@ -64,7 +63,7 @@ def test_actual_matured():
     try:
         df_3a = pd.read_csv('data/LoanStats3a_securev1.csv', header=True).iloc[:-2, :]
         df_raw = df_3a.copy()
-    except (OSError, IOError):
+    except OSError, IOError:
         print "Training data not found. Please install from https://www.lendingclub.com/info/download-data.action"
 
     print "Pre-processing data..."
@@ -96,7 +95,7 @@ def compare_IRR():
     print "Loading model..."
     try:
         model = load_from_pickle('pickle/model.pkl')
-    except (OSError, IOError):
+    except OSError, IOError:
         print "Model not found. Initializing training process, this might take some time..."
         model = initialize_model()
 

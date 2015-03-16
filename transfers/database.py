@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 import pymongo
 import psycopg2
 
@@ -7,7 +9,7 @@ def insert_into_mongodb(loan_results, loan_details):
     Insert loan features and expected IRR into PostgresQL database.
     '''
     client = pymongo.MongoClient()
-    db = client.rateflask   
+    db = client.rateflask
     collection_search = db.collection_search
     collection_get = db.collection_get
 
@@ -15,10 +17,17 @@ def insert_into_mongodb(loan_results, loan_details):
     collection_get.insert(loan_details)
 
 
-def insert_into_postgresql(database_name, table_name, results):
+def insert_into_postgresql(df_display):
     '''
     Insert loan features and expected IRR into PostgresQL database.
     '''
+    database_name = 'rateflask'
+    table_name = 'results'
+
+    df_results = df_display.drop(['percent_fund'], axis=1)
+    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    results = df_results.values
+
     conn = psycopg2.connect(dbname=database_name, user='postgres', host='/tmp')
     cur = conn.cursor()
 

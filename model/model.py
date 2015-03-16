@@ -10,7 +10,7 @@ from helpers.cashflow import get_cashflows, calc_IRR
 
 class StatusModel(object):
     def __init__(self,
-                 model=RandomForestRegressor(),
+                 model=RandomForestRegressor,
                  parameters={'n_estimators':100,
                              'max_depth':10}):
         '''

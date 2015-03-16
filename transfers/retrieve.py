@@ -4,11 +4,23 @@ from lendingclub.filters import Filter
 import time
 
 
-def request_loan_data(filter_search):
+def request_loan_data():
     '''
     Requests list of loans that can be invested in, then makes individual call
     for details of the loans. Results stored in MongoDB database.
     '''
+    filter_search = {'exclude_existing': False,
+                     'funding_progress': 0,
+                     'grades': {'All': False,
+                                'A': True,
+                                'B': True,
+                                'C': True,
+                                'D': True,
+                                'E': False,
+                                'F': False,
+                                'G': False},
+                     'term': {'Year3': True, 'Year5': False}}
+                 
     club = LendingClub()
     filter_search = Filter(filter_search)
     club.authenticate()

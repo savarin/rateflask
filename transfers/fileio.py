@@ -1,4 +1,4 @@
-import pickle
+import dill as pickle
 
 
 def dump_to_pickle(file_object, file_path):
