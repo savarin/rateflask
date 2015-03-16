@@ -123,8 +123,8 @@ $(document).ready(function() {
 						<th>Term</th>
             <th>Amount</th>
             <th>% Funded</th>
-						<th>Lending Club rate</th>
-						<th>Rateflask rate</th>
+						<th>LC rate</th>
+						<th>RF rate</th>
             <th>% Difference</th>
 					</tr>
 				</thead>
@@ -136,8 +136,8 @@ $(document).ready(function() {
             <th>Term</th>
             <th>Amount</th>
             <th>% Funded</th>
-            <th>Lending Club rate</th>
-            <th>Rateflask rate</th>
+            <th>LC rate</th>
+            <th>RF rate</th>
             <th>% Difference</th>
 					</tr>
 				</tfoot>
@@ -167,9 +167,9 @@ $(document).ready(function() {
 
 	<script type="text/javascript">
 	
-    function chart(chartname, datafile) {
+function chart(chartname, datafile, ymax) {
 
-  var margin = {top: 40, right: 40, bottom: 40, left: 40},
+  var margin = {top: 40, right: 0, bottom: 40, left: 40},
       width = 475 - margin.left - margin.right,
       height = 250 - margin.top - margin.bottom;
 
@@ -188,7 +188,7 @@ $(document).ready(function() {
   var yAxis = d3.svg.axis()
       .scale(y)
       .orient("left")
-      .ticks(5, "%");
+      .ticks(3, "%");
 
   var formatAsPercentage = d3.format(".2f")
 
@@ -210,7 +210,7 @@ $(document).ready(function() {
 
   d3.tsv(datafile, type, function(error, data) {
     x.domain(data.map(function(d) { return d.subgrade; }));
-    y.domain([0, 0.11]);
+    y.domain([0, ymax]);
 
     svg.append("g")
         .attr("class", "x axis")
@@ -242,10 +242,10 @@ $(document).ready(function() {
   });
 }
 
-chart("#chartline1", "static/chart/chart1.tsv");
-chart("#chartline2", "static/chart/chart2.tsv");
-chart("#chartline3", "static/chart/chart3.tsv");
-chart("#chartline4", "static/chart/chart4.tsv");
+chart("#chartline1", "../static/chart/chart1.tsv", 0.16);
+chart("#chartline2", "../static/chart/chart2.tsv", 0.16);
+chart("#chartline3", "../static/chart/chart3.tsv", 0.16);
+chart("#chartline4", "../static/chart/chart4.tsv", 0.16);
 
 function type(d) {
   d.rate = +d.rate;

@@ -1,3 +1,22 @@
+rateflask
+========
+
+rateflask calculates the rate of return at inception of a Lending Club loan
+using Random Forests.
+
+The training data is the set of 3-year loans issued between 2012 and 2014. The
+model is validated against 3-year loans issued between 2009 and 2011.
+
+### Requirements
+* numpy 1.9.0
+* pandas 0.14.1
+* scikit-learn 0.14.1
+* lendingclub 0.14.1
+* pymongo 2.8
+* psycopg2 2.5.3
+* dill 0.2.2
+
+
 
 **Helpers:**
 

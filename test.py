@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 import dill
 from sklearn.ensemble import RandomForestRegressor
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from helpers.preprocessing import process_features, process_payment
 from model.model import StatusModel
-from model.start import initialize_model_class
+from model.start import initialize_model
 from model.validate import actual_IRR
 
 
@@ -94,7 +95,7 @@ def test_actual_matured():
 def compare_IRR():
     print "Loading model..."
     try:
-        model = load_from_pickle('pickle/test.pkl')
+        model = load_from_pickle('pickle/model.pkl')
     except (OSError, IOError):
         print "Model not found. Initializing training process, this might take some time..."
         model = initialize_model()
@@ -141,8 +142,7 @@ def compare_IRR():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'compare':
+    if len(sys.argv) > 1 and sys.argv[1] == 'compare':
             compare_IRR()
     else:
         test_expected_current()
