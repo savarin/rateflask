@@ -1,9 +1,13 @@
 rateflask
 ========
 
-Predicting the rate of return at inception of a Lending Club loan with Random Forests
+rateflask predicts the rate of return at inception of a Lending Club loan.
 
-Analysis of Lending Club data tend to focus on loans that have already matured. Matured loans, however, comprise less than 10% of loans issued. This conundrum inspired me to create a new methodology that enables loan comparisons be made, regardless as to whether the loan has matured, is ongoing or yet to be issued. The methodology involves using Random Forests to predict the expected loan payment for a particular month, then aggregated across the whole period to give a single rate of return metric. This allows 90% of loans issued be used as training data, and the set of matured loans as validation.
+
+### Description
+Analysis of Lending Club data tend to focus on loans that have already matured. Matured loans, however, comprise less than 10% of loans issued. This conundrum inspired a new methodology that enables loan comparisons be made, regardless as to whether the loan has matured, is ongoing or yet to be issued.
+
+The methodology involves using Random Forests to predict the expected loan payment for a particular month, then aggregated across the whole period to give a single rate of return metric. This allows 90% of loans issued be used as training data, and the set of matured loans as validation.
 
 ### Requirements
 * numpy 1.9.0
