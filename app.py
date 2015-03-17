@@ -5,7 +5,7 @@ from flask import Flask, render_template, make_response
 from sklearn.ensemble import RandomForestRegressor
 from collections import defaultdict, deque
 from functools import wraps, update_wrapper
-from datetime import datetime 
+from datetime import datetime
 from transfers.fileio import dump_to_pickle, load_from_pickle
 from transfers.retrieve import request_loan_data
 from transfers.database import insert_into_mongodb, insert_into_postgresql
@@ -38,34 +38,55 @@ def nocache(view):
         response.headers['Expires'] = '-1'
         return response
 
-    return update_wrapper(no_cache, view) 
+    return update_wrapper(no_cache, view)
 
 
 def process_for_display(model, df, loan_results):
     '''
     Processes inputs for data table.
+
+    Parameters:
+    model: StatusModel trained with 2012-2014 3-year loan data. class.
+    df: Processed results and details of loans from API call. dataframe.
+    loan_results: Pre-processed details of loans from API call. list.
+
+    Returns:
+    Loans obtained from API call, with expected IRR and features as detailed on 
+    main Lending Club page. pandas dataframe.
     '''
 
     IRR = model.expected_IRR(df, actual_rate=True)
+    # Calculates the percentage of loan that has already been funded or taken up
+    # by investors.
     percent_fund = pd.DataFrame(loan_results)[['loanAmountRequested', 'loanAmtRemaining']]\
-                                .apply(lambda x: 1 - x['loanAmtRemaining'] \
+                                    .apply(lambda x: 1 - x['loanAmtRemaining']
                                         / float(x['loanAmountRequested']), axis=1).values
 
     df_display = df[['id', 'sub_grade', 'term', 'loan_amnt', 'int_rate']].copy()
-    df_display['datetime_now'] = "\'" + str(datetime_now) + "\'"
+    df_display['datetime_now'] = str(datetime_now)
     df_display['percent_fund'] = percent_fund
     df_display['IRR'] = IRR
+    # Calculates the percentage difference between the headline Lending Club 
+    # rate and expected IRR.
     df_display['percent_diff'] = df_display[['int_rate', 'IRR']]\
-                                    .apply(lambda x: (x['int_rate'] - x['IRR']) \
+                                    .apply(lambda x: (x['int_rate'] - x['IRR'])
                                                         / x['int_rate'], axis=1)
 
-    df_display = df_display[['id', 'datetime_now', 'sub_grade', 'term', 'loan_amnt', 
+    df_display = df_display[['id', 'datetime_now', 'sub_grade', 'term', 'loan_amnt',
                              'percent_fund', 'int_rate', 'IRR', 'percent_diff']]
 
     return df_display
 
 
 def run_process():
+    '''
+    Main process for app, invoked when administrator is at /refresh. Collects, 
+    processes and stores data, as well as calculates expected IRR and other
+    metrics for data table and charts.
+
+    Returns:
+    Loan details to populate data table at /index. numpy array.
+    '''
     print "Requesting loan details..."
     loan_results, loan_details = request_loan_data()
 
@@ -110,16 +131,23 @@ def run_process():
 @app.route('/refresh')
 @nocache
 def refresh():
+    '''
+    Starts main process to refresh data on web page.
+    '''
     results = run_process()
+    # Passing of results obtained on /refresh page to /index via DATA
     DATA.append(results)
     DATA.popleft()
-    
+
     return "Calculations based on latest update completed."
 
 
 @app.route('/')
 @nocache
 def rateflask():
+    '''
+    Renders result from data collection, processing and calculations.
+    '''
     return render_template('index.html', data=DATA[-1], datetime_now=DATETIME_NOW)
 
 

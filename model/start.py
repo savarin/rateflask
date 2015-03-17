@@ -7,6 +7,12 @@ from model import StatusModel
 
 
 def initialize_model():
+    '''
+    Calls on the StatusModel class, processes training data and trains model.
+
+    Returns:
+    StatusModel trained with 2012-2014 3-year loan data. statusmodel class. 
+    '''
     model = StatusModel(model=RandomForestRegressor,
                         parameters={'n_estimators':100,
                                      'max_depth':10})

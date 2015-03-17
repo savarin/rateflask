@@ -6,7 +6,12 @@ import psycopg2
 
 def insert_into_mongodb(loan_results, loan_details):
     '''
-    Insert loan features and expected IRR into PostgresQL database.
+    Insert pre-processed data from API requests into MongoDB database.
+
+    Parameters:
+    loan_results: Results obtained from initial API request. list.
+    loan_details: Individual loan details, obtained with individual API request
+    of loan ids obtained in loan_results. list.
     '''
     client = pymongo.MongoClient()
     db = client.rateflask
@@ -20,12 +25,19 @@ def insert_into_mongodb(loan_results, loan_details):
 def insert_into_postgresql(df_display):
     '''
     Insert loan features and expected IRR into PostgresQL database.
+
+    Parameters:
+    df_display: Loans obtained from API call, with expected IRR and features as 
+    detailed on main Lending Club page. pandas dataframe.
     '''
     database_name = 'rateflask'
     table_name = 'results'
 
     df_results = df_display.drop(['percent_fund'], axis=1)
-    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: "\'" + str(x) + "\'")
+    df_results['sub_grade'] = df_results['sub_grade'].map(lambda x: \
+                                                        "\'" + str(x) + "\'")
+    df_results['datetime_now'] = df_results['datetime_now'].map(lambda x: \
+                                                        "\'" + str(x) + "\'")
     results = df_results.values
 
     conn = psycopg2.connect(dbname=database_name, user='postgres', host='/tmp')

@@ -5,6 +5,9 @@ import pandas as pd
 def generate_for_charts(df_max):
     '''
     Generates input files to be used for charts on page.
+
+    Parameters:
+    df_max: Maximum IRR values of each sub-grade. pandas dataframe.
     '''
     df_chart = pd.Series(data = [0.0] * 20,
                      index = ['A1', 'A2', 'A3', 'A4', 'A5', 
@@ -28,6 +31,13 @@ def generate_for_charts(df_max):
 def reformat_for_display(df_display):
     '''
     Reformat details for data table.
+
+    Parameters:
+    df_display: Loans obtained from API call, with expected IRR and features as 
+    detailed on main Lending Club page. pandas dataframe.
+
+    Returns:
+    Data reformatted to string format, for display in data table. pandas dataframe.
     '''
     df_display = df_display.drop(['datetime_now'], axis=1)
     df_display['term'] = df_display['term'].map(lambda x: str(x) + ' mth')

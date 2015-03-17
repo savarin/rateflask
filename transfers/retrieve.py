@@ -8,6 +8,11 @@ def request_loan_data():
     '''
     Requests list of loans that can be invested in, then makes individual call
     for details of the loans. Results stored in MongoDB database.
+
+    Returns:
+    loan_results: Results obtained from initial API request. list.
+    loan_details: Individual loan details, obtained with individual API request
+    of loan ids obtained in loan_results. list.
     '''
     filter_search = {'exclude_existing': False,
                      'funding_progress': 0,

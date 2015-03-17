@@ -8,6 +8,14 @@ def process_requests(loan_results, loan_details):
     '''
     Process data received from API requests, to enable result to be passed
     through process_features
+
+    Parameters:
+    loan_results: Results obtained from initial API request. list.
+    loan_details: Individual loan details, obtained with individual API request
+    of loan ids obtained in loan_results. list.
+
+    Returns:
+    Data in input format for process_features. pandas dataframe.
     '''
     df_search = pd.DataFrame(loan_results)\
                     [['loan_id', 'loanGrade', 'loanRate', 
@@ -79,6 +87,20 @@ def process_features(df_raw, restrict_date=True, current_loans=True, features_di
         date of loan issuance, issuance date of loan if n/a
     revol_util - missing values filled in by average
     mths_since_last - missing values filled with -1
+
+    Parameters:
+    df_raw: Pre-processed data consisting of matured, ongoing or to-be-issued 
+    loans. pandas dataframe.
+    restrict_date: Choice on whether to restrict issue date of loan. Only if 
+    restricting date to either period of training data or validation data. boolean.
+    current_loans: Only applies if restrict_date is True. If set to True, then 
+    restricts data to training data period (2012-14). If set to False, then 
+    restricts data to validation period (2009-11). boolean.
+    features_dict: Values to fill-in missing data points, i.e. columns emp_length
+    and revol_util. dictionary.
+
+    Returns:
+    Processed data for expected IRR calculation. pandas dataframe.
     '''
     grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
     term_mask = df_raw['term'].str.contains('36', na=False)
@@ -194,6 +216,12 @@ def process_features(df_raw, restrict_date=True, current_loans=True, features_di
 def process_payment(df_raw):
     '''
     Process payment information pertaining to matured loans.
+
+    Parameters:
+    df_raw: Pre-processed data consisting of matured loans. pandas dataframe.
+
+    Returns:
+    Processed data for actual IRR calculation. pandas dataframe.
     '''
     grade_mask = df_raw['grade'].isin(['A', 'B', 'C', 'D'])
     term_mask = df_raw['term'].str.contains('36', na=False)
