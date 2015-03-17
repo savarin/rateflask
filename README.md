@@ -39,7 +39,7 @@ To be added:
 * Mechanics: How does the model work?
 * Application: Why do I care?
 
-Presentation slides can be found [here](https://github.com/savarin/rateflask/blob/master/presentation.pdf), with details on how the charts and 
+Presentation slides can be found [here](https://github.com/savarin/rateflask/blob/master/notebooks/presentation.pdf), with details on how the charts and 
 figures are generated [here](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb).
 
 ### Requirements
@@ -54,8 +54,7 @@ figures are generated [here](http://nbviewer.ipython.org/github/savarin/rateflas
 
 ### Installation
 1. Clone this repo.
-2. Download the data from the Lending Club website, or from the following 
-[Dropbox address](https://www.dropbox.com/sh/pmwh81xl7bi5axv/AABSewOpldF2zdqr6JOP5lNha?dl=0), 
+2. Download the full version data from the [Lending Club website](https://www.lendingclub.com/info/download-data.action), or from the following [Dropbox address](https://www.dropbox.com/sh/pmwh81xl7bi5axv/AABSewOpldF2zdqr6JOP5lNha?dl=0), 
 and place in a directory labeled `data`.
 3. Install the listed requirements.
 4. (Optional) Start up a MongoDB instance, and a PostgreSQL database named 
@@ -72,20 +71,20 @@ compare`. Please note that the validation process might take some time.
 
 ### Modules
 
-**model - rate of return prediction model and validation
-- model.py - core prediction model, trained on 2012-14 loan data
-- validation.py - validates prediction model with 2009-11 loan data
-- start - initializes new model on first start
+**model - rate of return prediction model and validation**
+* model.py - core prediction model, trained on 2012-14 loan data
+* validation.py - validates prediction model with 2009-11 loan data
+* start - initializes new model on first start
 
 **helpers - data processing and cashflow generation**
-- preprocessing.py - cleans up data and fills missing values
-- postprocessing.py - creates files for charts and data table
-- cashflow.py - generates cashflows and compounding curves
+* preprocessing.py - cleans up data and fills missing values
+* postprocessing.py - creates files for charts and data table
+* cashflow.py - generates cashflows and compounding curves
 
 **transfers - file input/output, API requests and database insertions**
-- fileio.py - dumping and loading data with pickle/dill
-- retrieve.py - requests data from Lending Club API
-- database.py - inserts data to MongoDB and PostgreSQL
+* fileio.py - dumping and loading data with pickle/dill
+* retrieve.py - requests data from Lending Club API
+* database.py - inserts data to MongoDB and PostgreSQL
 
 ### Next steps
 
