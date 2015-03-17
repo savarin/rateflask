@@ -33,14 +33,14 @@ the actual rate of return, calculated purely with actual payment data, against
 the expected rate of return, calculated purely on loan features.
 
 For further details:
-* Validation: Does the model work?
+* [Validation: Does the model work?](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/validation.ipynb)
 
 To be added:
 * Mechanics: How does the model work?
 * Application: Why do I care?
 
-Presentation slides can be found here, with details on how the charts and 
-figures are generated here.
+Presentation slides can be found [here](https://github.com/savarin/rateflask/blob/master/presentation.pdf), with details on how the charts and 
+figures are generated [here](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb).
 
 ### Requirements
 * numpy 1.9.0
