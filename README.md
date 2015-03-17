@@ -16,13 +16,15 @@ payment for a particular month, then aggregated across the whole period to give
 a single rate of return metric for each loan. This allows 90% of loans issued be 
 used as training data, and the remaining set of matured loans as validation.
 
+![][issuance]
+
 ### Details
 
-The model consists of 4 x 36 individual [Random Forests][Random Forests] sub-
-models, one for each grade-month pair (grades of A - D, in period of Jan 2012 - 
-Dec 2014). The training data is the set of 3-year loans issued between 2012 and 
-2014, i.e. ongoing loans. Loan details (FICO, monthly income, etc.) are used as 
-features, and the loan status (current, in default, etc) as targets.
+The model consists of 4 x 36 individual [Random Forests][Random Forests] sub-models, 
+one for each grade-month pair (grades A - D, in the period Jan 2012 - Dec 2014). 
+The training data is the set of 3-year loans issued between 2012 and 2014, i.e. 
+ongoing loans. Loan details (FICO, monthly income, etc.) are used as features, 
+and the loan status (current, in default, etc) as targets.
 
 The [loan status][loan status] is used to calculate the probability of each 
 payment made, and aggregated to give the rate of return of that loan. Viewed as a black box, the 
@@ -116,6 +118,7 @@ Licensed under the MIT licence.
 
 [already matured]: https://www.lendingrobot.com/#/resources/charts
 [less than 10%]: https://www.lendingclub.com/info/statistics.action
+[issuance]: static/images/issuance.png
 
 [Random Forests]: http://en.wikipedia.org/wiki/Random_forest
 [loan status]: https://www.lendingclub.com/info/demand-and-credit-profile.action

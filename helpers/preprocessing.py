@@ -128,6 +128,8 @@ def process_features(df_raw, restrict_date=True, current_loans=True, features_di
                  'mths_since_last_delinq', 'mths_since_last_record', 'mths_since_last_major_derog',
                  'purpose', 'home_ownership']]
 
+    # Loan status reflects probability of specific payment will be paid:
+    # https://www.lendingclub.com/info/demand-and-credit-profile.action
     df['loan_status'] = df['loan_status'].map({'Fully Paid': 1., 'Current': 1., 
                                                'In Grace Period': 0.76, 
                                                'Late (16-30 days)': 0.49, 
