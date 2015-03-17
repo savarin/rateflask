@@ -38,19 +38,17 @@ strategy based on the model, compared to choosing a loan of a specified sub-
 grade at random. Details on how the chart is generated can be found 
 [here][charts].
 
-[][quartile]
+![][quartile]
 
 For further details:
-* [Validation: Does the model work?](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/validation.ipynb)
+* [Validation: Does the model work?][validation]
 
 To be added:
 * Mechanics: How does the model work?
 * Application: Why do I care?
 
-Presentation slides can be found 
-[here](https://github.com/savarin/rateflask/blob/master/notebooks/presentation.pdf), with details on how the charts and 
-figures are generated 
-[here](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb).
+Presentation slides can be found [here][presentation], with details on how the 
+charts and figures are generated [here][charts].
 
 ### Requirements
 * numpy 1.9.0
@@ -66,8 +64,9 @@ figures are generated
 
 ### Installation
 1. Clone this repo.
-2. Download the full version data from the [Lending Club website](https://www.lendingclub.com/info/download-data.action), or from the following [Dropbox address](https://www.dropbox.com/sh/pmwh81xl7bi5axv/AABSewOpldF2zdqr6JOP5lNha?dl=0), 
-and place in a directory labeled `data`.
+2. Download the full version data from the 
+[Lending Club website][Lending Club website], or from the following 
+[Dropbox address][Dropbox address], and place in a directory labeled `data`.
 3. Install the listed requirements.
 4. (Optional) Start up a MongoDB instance, and a PostgreSQL database named 
 'rateflask'.
@@ -75,8 +74,8 @@ and place in a directory labeled `data`.
 To run the production version locally, run `python app.py` (or `sudo python 
 app.py` should there be permission errors) in terminal from the repo directory.
 Direct your browser to `0.0.0.0:8000` to view the app, and to 
-`0.0.0.0:8000/refresh` to update the data. For debugging, run `python app.py
-debug`.
+`0.0.0.0:8000/refresh` to update the data (requires Lending Club login). For 
+debugging, run `python app.py debug`.
 
 To test if the installation has been successful, run `python test.py` from the 
 same location. To run the model against the validation set, run `python test.py 
@@ -107,12 +106,14 @@ portfolio based on a user's desired risk profile.
 ### License
 
 Copyright (c) 2015 Rateflask
+
 Licensed under the MIT licence.
 
 
 <!-- links -->
 
 [rateflask.com]: http://www.rateflask.com
+
 [already matured]: https://www.lendingrobot.com/#/resources/charts
 [less than 10%]: https://www.lendingclub.com/info/statistics.action
 
@@ -120,3 +121,9 @@ Licensed under the MIT licence.
 [loan status]: https://www.lendingclub.com/info/demand-and-credit-profile.action
 [charts]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb
 [quartile]: static/images/quartile.png
+
+[validation]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/validation.ipynb
+[presentation]: https://github.com/savarin/rateflask/blob/master/notebooks/presentation.pdf
+
+[Lending Club website]: https://www.lendingclub.com/info/download-data.action
+[Dropbox address]: https://www.dropbox.com/sh/pmwh81xl7bi5axv/AABSewOpldF2zdqr6JOP5lNha?dl=0
