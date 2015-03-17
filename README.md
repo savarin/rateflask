@@ -6,30 +6,26 @@ version at [rateflask.com][rateflask.com].
 
 ### Description
 Analysis of Lending Club data tends to focus on loans that have 
-[already matured][already matured]. 
-Matured loans, however, comprise 
-[less than 10%](https://www.lendingclub.com/info/statistics.action)
-of loans issued. This conundrum 
-inspired a new methodology to enable loan comparisons be made, regardless as to 
-whether the loan has matured, is ongoing or yet to be issued.
+[already matured][already matured]. Matured loans, however, comprise 
+[less than 10%][less than 10%] of loans issued. This conundrum inspired a new 
+methodology to enable loan comparisons be made, regardless as to whether the 
+loan has matured, is ongoing or yet to be issued.
 
-The methodology involves using
-[Random Forests](http://en.wikipedia.org/wiki/Random_forest)
-to predict the expected loan payment for a particular month, then aggregated 
-across the whole period to give a single rate of return metric for each loan. 
-This allows 90% of loans issued be used as training data, and the remaining set
-of matured loans as validation.
+The methodology involves using Random Forests to predict the expected loan 
+payment for a particular month, then aggregated across the whole period to give 
+a single rate of return metric for each loan. This allows 90% of loans issued be 
+used as training data, and the remaining set of matured loans as validation.
 
 ### Details
 
-The model consists of 4 x 36 individual Random Forest sub-models, one for each
-grade-month pair (grades of A - D, in period of Jan 2012 - Dec 2014). The 
-training data is the set of 3-year loans issued between 2012 and 2014, i.e. 
-ongoing loans. Loan details (FICO, monthly income, etc.) are used as features, 
-and the loan status (current, in default, etc) as targets.
+The model consists of 4 x 36 individual [Random Forests][Random Forests] sub-
+models, one for each grade-month pair (grades of A - D, in period of Jan 2012 - 
+Dec 2014). The training data is the set of 3-year loans issued between 2012 and 
+2014, i.e. ongoing loans. Loan details (FICO, monthly income, etc.) are used as 
+features, and the loan status (current, in default, etc) as targets.
 
-The loan status is used to calculate the probability of each payment made, and 
-aggregated to give the rate of return of that loan. Viewed as a black box, the 
+The [loan status][loan status] is used to calculate the probability of each 
+payment made, and aggregated to give the rate of return of that loan. Viewed as a black box, the 
 model takes in loan features as input, and outputs the expected rate of return.
 
 The trained model is validated against 3-year loans issued between 2009 and
@@ -39,8 +35,8 @@ the expected rate of return, calculated purely on loan features.
 
 The graph below shows the improvement in rate of return with an active selection
 strategy based on the model, compared to choosing a loan of a specified sub-
-grade at random. Details on how the chart is generated can be found
-[here](http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb).
+grade at random. Details on how the chart is generated can be found 
+[here][charts].
 
 [][quartile]
 
@@ -114,8 +110,13 @@ Copyright (c) 2015 Rateflask
 Licensed under the MIT licence.
 
 
-
 <!-- links -->
 
 [rateflask.com]: http://www.rateflask.com
 [already matured]: https://www.lendingrobot.com/#/resources/charts
+[less than 10%]: https://www.lendingclub.com/info/statistics.action
+
+[Random Forests]: http://en.wikipedia.org/wiki/Random_forest
+[loan status]: https://www.lendingclub.com/info/demand-and-credit-profile.action
+[charts]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb
+[quartile]: static/images/quartile.png
