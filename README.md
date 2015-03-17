@@ -1,8 +1,8 @@
 rateflask
 ========
 
-rateflask predicts the rate of return at inception of a Lending Club loan, with 
-the web version at [rateflask.com](http://www.rateflask.com).
+rateflask predicts the rate of return at inception of a Lending Club loan, web 
+version at [rateflask.com](http://www.rateflask.com).
 
 ### Description
 Analysis of Lending Club data tends to focus on loans that have already matured. 
@@ -66,17 +66,17 @@ app.py` should there be permission errors) in terminal from the repo directory.
 For debugging, run `python app.py debug`.
 
 To test if the installation has been successful, run `python test.py` from the same
-location. To run the model against the validation data set, run `python test.py 
+location. To run the model against the validation set, run `python test.py 
 compare`. Please note that the validation process might take some time.
 
 ### Modules
 
-##### helpers - data processing and cashflow generation
+*helpers - data processing and cashflow generation*
 - preprocessing.py - cleans up data and fills missing values
 - postprocessing.py - creates files for charts and data table
 - cashflow.py - generates cashflows and compounding curves for IRR calculation
 
-##### transfers - file input/output, API requests and database insertions
+*transfers - file input/output, API requests and database insertions*
 - fileio.py - dumping and loading data with pickle/dill
 - retrieve.py - requests data from Lending Club API
 - database.py - inserts data to MongoDB and PostgreSQL
