@@ -66,8 +66,8 @@ charts and figures are generated [here][charts].
 
 ### Installation
 1. Clone this repo.
-2. Download the full version data from the 
-[Lending Club website][Lending Club website], or from the following 
+2. Download the full version data (~270 MB) from the 
+[Lending Club website][Lending Club website] or from the following 
 [Dropbox address][Dropbox address], and place in a directory labeled `data`.
 3. Install the listed requirements.
 4. (Optional) Start up a MongoDB instance, and a PostgreSQL database named 
