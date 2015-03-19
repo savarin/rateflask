@@ -125,12 +125,17 @@ def compare_IRR():
 
     print "Comparison of IRR by subgrade:", df_result.groupby('sub_grade').mean()
 
+    df_compare = df_result.groupby('sub_grade').mean()
+    df_compare['headline'] = sorted(int_rate_dict.values())
+
     print "Plotting results..."
     plt.figure(figsize=(12, 6))
     x = xrange(20)
-    y_true = df_result.groupby('sub_grade').mean()['IRR_true']
-    y_predict = df_result.groupby('sub_grade').mean()['IRR_predict']
+    y_true = df_compare['IRR_true']
+    y_predict = df_compare['IRR_predict']
+    y_headline = df_compare['headline']
 
+    plt.plot(x, y_headline, label='Lending Club rate')
     plt.plot(x, y_true, label='Actual IRR')
     plt.plot(x, y_predict, label='Predicted IRR')
     plt.legend(loc='best')
@@ -142,7 +147,7 @@ def compare_IRR():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'compare':
-            compare_IRR()
+        compare_IRR()
     else:
         test_expected_current()
         test_actual_matured()    

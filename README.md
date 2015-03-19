@@ -20,37 +20,41 @@ used as training data, and the remaining set of matured loans as validation.
 
 ### Details
 
-The model consists of 4 x 36 individual [Random Forests][Random Forests] sub-models, 
-one for each grade-month pair (grades A - D, in the period Jan 2012 - Dec 2014). 
-The training data is the set of 3-year loans issued between 2012 and 2014, i.e. 
-ongoing loans. Loan details (FICO, monthly income, etc.) are used as features, 
-and the loan status (current, in default, etc) as targets.
+The model consists of 4 x 36 individual [Random Forests][Random Forests] 
+sub-models, one for each grade-month pair (grades A - D, in the period Jan 2012 
+- Dec 2014). The training data is the set of 3-year loans issued between 2012 
+and 2014, i.e. ongoing loans. Loan details (FICO, monthly income, etc.) are used 
+as features, and the loan status (current, in default, etc) as targets.
 
 The [loan status][loan status] is used to calculate the probability of each 
-payment made, and aggregated to give the rate of return of that loan. Viewed as a black box, the 
-model takes in loan features as input, and outputs the expected rate of return.
+payment made, and aggregated to give the rate of return of that loan. Viewed as 
+a black box, the model takes in loan features as input, and outputs the expected 
+rate of return.
 
 The trained model is validated against 3-year loans issued between 2009 and
 2011, i.e. loans that have matured. The validation process involves comparing 
 the actual rate of return, calculated purely with actual payment data, against
-the expected rate of return, calculated purely on loan features.
+the expected rate of return, calculated purely on loan features. The actual and 
+predicted rate of return are illustrated in the graph below by blue and green
+respectively.
+
+![][compare]
 
 The graph below shows the improvement in rate of return with an active selection
 strategy based on the model, compared to choosing a loan of a specified sub-
-grade at random. Details on how the chart is generated can be found 
-[here][charts].
+grade at random. The active selection strategy involves using the model to
+generate the predicted rate of return, ranking the loans and identifying the top
+quartile. Details on how the chart is generated can be found [here][charts].
 
 ![][quartile]
 
 For further details:
+* [Mechanics: How does the model work?][mechanics]
 * [Validation: Does the model work?][validation]
+* [Application: Why do I care?][application]
 
-To be added:
-* Mechanics: How does the model work?
-* Application: Why do I care?
-
-Presentation slides can be found [here][presentation], with details on how the 
-charts and figures are generated [here][charts].
+Presentation slides can be found [here][presentation]. The charts were generated
+with R's ggplot via rpy2, and details can be found [here][charts].
 
 ### Requirements
 * numpy 1.9.0
@@ -122,10 +126,13 @@ Licensed under the MIT licence.
 
 [Random Forests]: http://en.wikipedia.org/wiki/Random_forest
 [loan status]: https://www.lendingclub.com/info/demand-and-credit-profile.action
+[issuance]: static/images/compare.png
 [charts]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb
 [quartile]: static/images/quartile.png
 
+[mechanics]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/mechanics.ipynb
 [validation]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/validation.ipynb
+[application]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/application.ipynb
 [presentation]: https://github.com/savarin/rateflask/blob/master/notebooks/presentation.pdf
 
 [Lending Club website]: https://www.lendingclub.com/info/download-data.action
