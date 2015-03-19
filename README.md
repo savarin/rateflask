@@ -21,10 +21,10 @@ used as training data, and the remaining set of matured loans as validation.
 ### Details
 
 The model consists of 4 x 36 individual [Random Forests][Random Forests] 
-sub-models, one for each grade-month pair (grades A - D, in the period Jan 2012 
-- Dec 2014). The training data is the set of 3-year loans issued between 2012 
-and 2014, i.e. ongoing loans. Loan details (FICO, monthly income, etc.) are used 
-as features, and the loan status (current, in default, etc) as targets.
+sub-models, one for each grade-month pair (grades A - D, in the period Jan 
+2012 - Dec 2014). The training data is the set of 3-year loans issued between 
+2012 and 2014, i.e. ongoing loans. Loan details (FICO, monthly income, etc.) are 
+used as features, and the loan status (current, in default, etc) as targets.
 
 The [loan status][loan status] is used to calculate the probability of each 
 payment made, and aggregated to give the rate of return of that loan. Viewed as 
@@ -36,7 +36,7 @@ The trained model is validated against 3-year loans issued between 2009 and
 the actual rate of return, calculated purely with actual payment data, against
 the expected rate of return, calculated purely on loan features. The actual and 
 predicted rate of return are illustrated in the graph below by blue and green
-respectively.
+respectively. The headline rate in red is the Lending Club rate.
 
 ![][compare]
 
@@ -44,7 +44,7 @@ The graph below shows the improvement in rate of return with an active selection
 strategy based on the model, compared to choosing a loan of a specified sub-
 grade at random. The active selection strategy involves using the model to
 generate the predicted rate of return, ranking the loans and identifying the top
-quartile. Details on how the chart is generated can be found [here][charts].
+quartile. Details on how the charts are generated can be found [here][charts].
 
 ![][quartile]
 
