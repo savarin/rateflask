@@ -126,7 +126,7 @@ Licensed under the MIT licence.
 
 [Random Forests]: http://en.wikipedia.org/wiki/Random_forest
 [loan status]: https://www.lendingclub.com/info/demand-and-credit-profile.action
-[issuance]: static/images/compare.png
+[compare]: static/images/compare.png
 [charts]: http://nbviewer.ipython.org/github/savarin/rateflask/blob/master/notebooks/charts.ipynb
 [quartile]: static/images/quartile.png
 
