@@ -40,7 +40,8 @@ respectively. The headline rate in red is the Lending Club rate.
 
 ![][compare]
 
-Loans of the same sub-grade band pay the same headline rate. Suppose you were
+Loans of the same sub-grade band pay the same headline rate. For example, all
+B-2 loans issued in Dec 2014 had an interest rate of 9.49%. Suppose you were
 given a number of B-2 loans to choose from, it's worth asking if it's possible
 to beat the average return in a statistically reliable way.
 
