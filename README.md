@@ -40,11 +40,15 @@ respectively. The headline rate in red is the Lending Club rate.
 
 ![][compare]
 
+Loans of the same sub-grade band pay the same headline rate. Suppose you were
+given a number of B-2 loans to choose from, it's worth asking if it's possible
+to beat the average return in a statistically reliable way.
+
 The graph below shows the improvement in rate of return with an active selection
 strategy based on the model, compared to choosing a loan of a specified sub-
 grade at random. The active selection strategy involves using the model to
 generate the predicted rate of return, ranking the loans and identifying the top
-quartile. Details on how the charts are generated can be found [here][charts].
+quartile.
 
 ![][quartile]
 
@@ -53,8 +57,9 @@ For further details:
 * [Validation: Does the model work?][validation]
 * [Application: Why do I care?][application]
 
-Presentation slides can be found [here][presentation]. The charts were generated
-with R's ggplot via rpy2, and details can be found [here][charts].
+Presentation slides can be found [here][presentation]. The charts for the 
+presentation and shown here were generated with R's ggplot via rpy2, and 
+detailed [here][charts].
 
 ### Requirements
 * numpy 1.9.0
