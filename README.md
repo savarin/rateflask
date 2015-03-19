@@ -46,11 +46,10 @@ given a number of B-2 loans to choose from, it's worth asking if it's possible
 to beat the average return in a statistically reliable way.
 
 The graph below shows the improvement in rate of return with an active selection
-strategy based on the model, compared to choosing a loan of a specified 
-sub-grade at random. The active selection strategy involves using the model to
-generate the predicted rate of return, ranking the loans and identifying the top
-quartile. The bottom quartile is also included in the graph for illustrative
-purposes.
+strategy based on the model, compared to choosing a loan of at random. The 
+active selection strategy involves using the model to generate the predicted 
+rate of return, ranking the loans and identifying the top quartile. The bottom 
+quartile is also included in the graph for illustrative purposes.
 
 ![][quartile]
 
