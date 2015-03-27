@@ -5,7 +5,7 @@ rateflask predicts the rate of return at inception of a Lending Club loan, web
 version at [rateflask.com][rateflask.com].
 
 ### Description
-Analysis of Lending Club data tends to focus on loans that have 
+Analysis of Lending Club data tend to focus on loans that have 
 [already matured][already matured]. Matured loans, however, comprise 
 [less than 10%][less than 10%] of loans issued. This conundrum inspired a new 
 methodology to enable loan comparisons be made, regardless as to whether the 
