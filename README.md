@@ -5,6 +5,9 @@ rateflask predicts the rate of return at inception of a Lending Club loan, web
 version at [rateflask.com][rateflask.com].
 
 ### Description
+
+*This Capstone Project was completed for Zipfian Academy, Winter 2015 cohort. For developments since then, please visit [github.com/rateflask][github.com/rateflask].*
+
 Analysis of Lending Club data tend to focus on loans that have 
 [already matured][already matured]. Matured loans, however, comprise 
 [less than 10%][less than 10%] of loans issued. This conundrum inspired a new 
@@ -126,6 +129,7 @@ Licensed under the MIT licence.
 
 [rateflask.com]: http://www.rateflask.com
 
+[github.com/rateflask]: https://github.com/rateflask
 [already matured]: https://www.lendingrobot.com/#/resources/charts
 [less than 10%]: https://www.lendingclub.com/info/statistics.action
 [issuance]: static/images/issuance.png
