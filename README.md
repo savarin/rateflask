@@ -1,3 +1,5 @@
+*This Capstone Project was completed as a part of the Zipfian Academy Data Science Bootcamp, Winter 2015 cohort. For developments since then, please visit [github.com/rateflask][github.com/rateflask].*
+
 rateflask
 ========
 
@@ -5,8 +7,6 @@ rateflask predicts the rate of return at inception of a Lending Club loan, web
 version at [rateflask.com][rateflask.com].
 
 ### Description
-
-*This Capstone Project was completed for Zipfian Academy, Winter 2015 cohort. For developments since then, please visit [github.com/rateflask][github.com/rateflask].*
 
 Analysis of Lending Club data tend to focus on loans that have 
 [already matured][already matured]. Matured loans, however, comprise 
@@ -113,6 +113,8 @@ compare`. Please note that the validation process might take some time.
 * retrieve.py - requests data from Lending Club API
 * database.py - inserts data to MongoDB and PostgreSQL
 
+The [CodeFlower][CodeFlower] visualization can be found [here][visualization].
+
 ### Next steps
 
 Portfolio selection model that selects the highest-returning diversified 
@@ -147,3 +149,6 @@ Licensed under the MIT licence.
 
 [Lending Club website]: https://www.lendingclub.com/info/download-data.action
 [Dropbox address]: https://www.dropbox.com/sh/pmwh81xl7bi5axv/AABSewOpldF2zdqr6JOP5lNha?dl=0
+
+[CodeFlower]: http://www.redotheweb.com/CodeFlower/
+[visualization]: http://rateflask.github.io/
