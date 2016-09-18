@@ -1,4 +1,4 @@
-*This Capstone Project was completed as a part of the Zipfian Academy Data Science Bootcamp, Winter 2015 cohort. For developments since then, please visit [github.com/rateflask][github.com/rateflask].*
+*This Capstone Project was completed as a part of the Zipfian Academy Data Science Bootcamp, Winter 2015.*
 
 rateflask
 ========
